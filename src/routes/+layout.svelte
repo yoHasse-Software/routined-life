@@ -7,6 +7,9 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>Routined Life</title>
 </svelte:head>
 
-{@render children?.()}
+<div class="min-h-screen bg-surface-50 dark:bg-surface-900">
+	{@render children?.()}
+</div>

@@ -59,7 +59,7 @@ Goal: Help users (esp. ADHD/Autistic and time-blind users) run consistent guided
   * id, name, emoji, color, notes
 * **Step**
 
-  * id, routine\_id, name, description, duration\_s, checklist\[]
+  * id, routine\_id, emoji, name, duration\_s, checklist\[]
 * **Session (Run)**
 
   * id, routine\_id, start\_ts, end\_ts, status
