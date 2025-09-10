@@ -6,7 +6,8 @@
 	import { formatTime } from '$lib/Utilities';
 	import { TimerStatus, SessionStatus } from '$lib/types';
 	import type { Routine, Step, Session, SessionStep, TimerState } from '$lib/types';
-	
+	import { Check, Pause, Play, SkipForward, RotateCcw } from '@lucide/svelte';
+
 	const routineId = $page.params.id;
 	
 	let routine = $state<Routine | null>(null);
@@ -241,20 +242,20 @@
 	<div class="min-h-screen flex items-center justify-center bg-surface-900">
 		<div class="text-center">
 			<p class="text-surface-300 mb-4">Routine not found</p>
-			<a href="/" class="btn variant-filled">Return to Dashboard</a>
+			<a href="/" class="btn preset-filled-secondary-500">Return to Dashboard</a>
 		</div>
 	</div>
 {:else}
 	<div class="min-h-screen bg-surface-900 text-surface-100">
 		{#if timerState.status === TimerStatus.IDLE}
 			<!-- Pre-start Screen -->
-			<div class="container mx-auto p-4 max-w-2xl">
+			<div class="container mx-auto p-6 max-w-2xl">
 				<div class="text-center py-8">
 					<div class="mb-8">
-						<span class="text-6xl block mb-4">{routine.emoji}</span>
-						<h1 class="text-3xl font-bold mb-2">{routine.name}</h1>
+						<span class="text-4xl sm:text-6xl block mb-4">{routine.emoji}</span>
+						<h1 class="text-2xl sm:text-3xl font-bold mb-2 px-4">{routine.name}</h1>
 						{#if routine.notes}
-							<p class="text-surface-300">{routine.notes}</p>
+							<p class="text-surface-300 px-4">{routine.notes}</p>
 						{/if}
 					</div>
 					
@@ -266,9 +267,9 @@
 									<div class="flex items-center space-x-3">
 										<span class="text-surface-400">{index + 1}.</span>
 										<span class="text-lg">{step.emoji}</span>
-										<span>{step.name}</span>
+										<span class="text-left flex-1">{step.name}</span>
 									</div>
-									<span class="text-surface-400">{formatTime(step.durationSeconds)}</span>
+									<span class="text-surface-400 ml-2">{formatTime(step.durationSeconds)}</span>
 								</div>
 							{/each}
 						</div>
@@ -280,16 +281,16 @@
 						</div>
 					</div>
 					
-					<div class="space-y-4">
+					<div class="space-y-6">
 						<button
 							onclick={startSession}
-							class="btn variant-filled-primary btn-xl w-full"
+							class="btn preset-filled-primary-500 w-full text-xl py-6 px-8 rounded-xl font-semibold shadow-lg"
 						>
 							🚀 Start Routine
 						</button>
 						<a
 							href="/"
-							class="btn variant-outline btn-lg w-full"
+							class="btn preset-outlined-primary-500 w-full text-lg py-4 px-6 rounded-xl"
 						>
 							← Back to Dashboard
 						</a>
@@ -298,12 +299,12 @@
 			</div>
 		{:else if timerState.status === TimerStatus.COMPLETED}
 			<!-- Completion Screen -->
-			<div class="container mx-auto p-4 max-w-2xl">
+			<div class="container mx-auto p-6 max-w-2xl">
 				<div class="text-center py-8">
 					<div class="mb-8">
-						<span class="text-6xl block mb-4">🎉</span>
-						<h1 class="text-3xl font-bold mb-2">Routine Complete!</h1>
-						<p class="text-surface-300">Great job finishing {routine.name}</p>
+						<span class="text-4xl sm:text-6xl block mb-4">🎉</span>
+						<h1 class="text-2xl sm:text-3xl font-bold mb-2 px-4">Routine Complete!</h1>
+						<p class="text-surface-300 px-4">Great job finishing {routine.name}</p>
 					</div>
 					
 					<div class="card p-6 bg-surface-800 mb-8">
@@ -327,16 +328,16 @@
 						{/if}
 					</div>
 					
-					<div class="space-y-4">
+					<div class="space-y-6">
 						<button
 							onclick={startSession}
-							class="btn variant-filled-primary btn-lg w-full"
+							class="btn preset-filled-primary-500 w-full text-xl py-6 px-8 rounded-xl font-semibold"
 						>
-							🔄 Run Again
+							<RotateCcw /> Run Again
 						</button>
 						<a
 							href="/"
-							class="btn variant-outline btn-lg w-full"
+							class="btn preset-outlined-primary-500 w-full text-lg py-4 px-6 rounded-xl"
 						>
 							← Back to Dashboard
 						</a>
@@ -349,20 +350,20 @@
 			{#if currentStep}
 				<div class="min-h-screen flex flex-col">
 					<!-- Header -->
-					<header class="p-4 bg-surface-800">
+					<header class="p-6 bg-surface-800">
 						<div class="container mx-auto max-w-4xl">
-							<div class="flex items-center justify-between">
+							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 								<div class="flex items-center space-x-3">
-									<span class="text-xl">{routine.emoji}</span>
-									<span class="font-semibold">{routine.name}</span>
+									<span class="text-2xl">{routine.emoji}</span>
+									<span class="font-semibold text-lg">{routine.name}</span>
 								</div>
-								<div class="flex items-center space-x-4">
-									<span class="text-surface-300">
+								<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+									<span class="text-surface-300 text-lg">
 										Step {timerState.currentStepIndex + 1} of {steps.length}
 									</span>
 									<button
 										onclick={abandonSession}
-										class="btn variant-outline-error btn-sm"
+										class="btn preset-outlined-primary-500-error py-3 px-6 text-lg rounded-xl w-full sm:w-auto"
 									>
 										Stop
 									</button>
@@ -382,24 +383,24 @@
 					</header>
 					
 					<!-- Main Content -->
-					<main class="flex-1 flex items-center justify-center p-4">
-						<div class="text-center max-w-2xl">
+					<main class="flex-1 flex items-center justify-center p-6">
+						<div class="text-center max-w-2xl w-full">
 							<!-- Current Step -->
 							<div class="mb-8">
-								<span class="text-8xl block mb-6">{currentStep.emoji}</span>
-								<h1 class="text-4xl font-bold mb-4">{currentStep.name}</h1>
+								<span class="text-6xl sm:text-8xl block mb-6">{currentStep.emoji}</span>
+								<h1 class="text-2xl sm:text-4xl font-bold mb-4 px-4">{currentStep.name}</h1>
 								{#if currentStep.description}
-									<p class="text-xl text-surface-300 mb-6">{currentStep.description}</p>
+									<p class="text-lg sm:text-xl text-surface-300 mb-6 px-4">{currentStep.description}</p>
 								{/if}
 							</div>
 							
 							<!-- Timer -->
 							<div class="mb-8">
-								<div class="text-6xl font-mono font-bold mb-4
+								<div class="text-4xl sm:text-6xl font-mono font-bold mb-4 px-4
 									{timerState.remainingSeconds <= 10 ? 'text-error-400 animate-pulse' : 'text-primary-400'}">
 									{formatTime(timerState.remainingSeconds)}
 								</div>
-								<p class="text-surface-400">
+								<p class="text-surface-400 text-lg">
 									{timerState.status === TimerStatus.PAUSED ? 'Paused' : 'Remaining'}
 								</p>
 							</div>
@@ -420,35 +421,41 @@
 							{/if}
 							
 							<!-- Controls -->
-							<div class="flex justify-center space-x-4">
+							<div class="flex items-center justify-center gap-4 px-4 max-w-md mx-auto">
+								<!-- Pause/Resume Button - Left Side -->
 								{#if timerState.status === TimerStatus.RUNNING}
 									<button
 										onclick={pauseTimer}
-										class="btn variant-filled-secondary btn-xl"
+										class="btn preset-outlined-secondary-500 text-3xl py-4 px-4 rounded-xl font-semibold min-h-[4rem] min-w-[4rem] shadow-lg flex items-center justify-center"
+										title="Pause"
 									>
-										⏸️ Pause
+										<Pause />
 									</button>
 								{:else if timerState.status === TimerStatus.PAUSED}
 									<button
 										onclick={resumeTimer}
-										class="btn variant-filled-primary btn-xl"
+										class="btn preset-filled-secondary-500 text-3xl py-4 px-4 rounded-xl font-semibold min-h-[4rem] min-w-[4rem] shadow-lg flex items-center justify-center"
+										title="Resume"
 									>
-										▶️ Resume
+										<Play />
 									</button>
 								{/if}
 								
-								<button
-									onclick={skipStep}
-									class="btn variant-outline btn-xl"
-								>
-									⏭️ Skip
-								</button>
-								
+								<!-- Done Button - Center (Takes most space) -->
 								<button
 									onclick={completeStep}
-									class="btn variant-filled-success btn-xl"
+									class="btn preset-filled-primary-500 text-xl py-6 px-8 rounded-xl font-semibold min-h-[4rem] shadow-lg flex-1 max-w-xs"
 								>
-									✅ Done
+									<Check />
+								</button>
+								
+								<!-- Skip Button - Right Side -->
+								<button
+									onclick={skipStep}
+									class="btn preset-outlined-secondary-500 text-3xl py-4 px-4 rounded-xl font-semibold min-h-[4rem] min-w-[4rem] flex items-center justify-center"
+									title="Skip"
+								>
+									<SkipForward />
 								</button>
 							</div>
 						</div>

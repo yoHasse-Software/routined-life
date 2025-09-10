@@ -5,3 +5,80 @@
 @import '@skeletonlabs/skeleton/themes/cerberus';
 
 @source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
+
+/* Mobile-first responsive improvements */
+@layer base {
+  /* Ensure minimum touch target sizes for mobile */
+  .btn {
+    min-height: 44px; /* Apple's recommended minimum touch target */
+    touch-action: manipulation; /* Improves tap performance */
+  }
+  
+  /* Improved spacing for mobile */
+  @media (max-width: 640px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    /* Ensure text is readable on mobile */
+    body {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Better tap targets for mobile */
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improve form inputs on mobile */
+    input, textarea, select {
+      font-size: 16px; /* Prevents zoom on iOS */
+      min-height: 44px;
+    }
+    
+    /* Better spacing for cards on mobile */
+    .card {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  /* Improve focus visibility for accessibility */
+  .btn:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+}
+
+/* Custom button variants for better mobile experience */
+@layer components {
+  .btn-mobile-lg {
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    min-height: 56px;
+  }
+  
+  .btn-mobile-xl {
+    padding: 1.5rem 2rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    min-height: 64px;
+  }
+  
+  /* Better card hover states for mobile */
+  @media (hover: hover) {
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+  }
+}

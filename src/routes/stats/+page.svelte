@@ -104,7 +104,7 @@
 			<h1 class="text-4xl font-bold text-primary-600 dark:text-primary-400">
 				📊 Statistics
 			</h1>
-			<a href="/" class="btn variant-outline">
+			<a href="/" class="btn preset-outlined-primary-500 py-3 px-6 rounded-xl text-lg">
 				← Back to Dashboard
 			</a>
 		</div>
@@ -293,7 +293,7 @@
 					<p class="text-surface-600 dark:text-surface-300 mb-6">
 						Complete your first routine to see detailed statistics and track your progress.
 					</p>
-					<a href="/" class="btn variant-filled-primary">
+					<a href="/" class="btn preset-filled-primary-500">
 						Create Your First Routine
 					</a>
 				</div>

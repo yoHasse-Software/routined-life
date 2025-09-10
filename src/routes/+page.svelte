@@ -5,6 +5,8 @@
 	import { ROUTINE_TEMPLATES } from '$lib/RoutineTemplates';
 	import { formatDuration } from '$lib/Utilities';
 	import type { Routine, Session, SessionStatus } from '$lib/types';
+	import { Play, Plus, SquarePen, Trash } from '@lucide/svelte';
+
 	
 	let routines = $state<Routine[]>([]);
 	let recentSessions = $state<Session[]>([]);
@@ -95,16 +97,16 @@
 	{:else}
 		<!-- Quick Actions -->
 		<section class="mb-8">
-			<div class="flex flex-wrap gap-4 mb-6">
+			<div class="flex flex-col sm:flex-row gap-4 mb-6">
 				<a 
 					href="/routines/new" 
-					class="btn variant-filled-primary text-lg px-6 py-3"
+					class="btn preset-outlined-primary-500 text-xl py-6 px-8 rounded-xl font-semibold shadow-lg flex-1 text-center"
 				>
-					➕ Create New Routine
+					<Plus /> Create New Routine
 				</a>
 				<a 
 					href="/stats" 
-					class="btn variant-outline-secondary"
+					class="btn preset-outlined-secondary-500 text-lg py-4 px-6 rounded-xl flex-1 text-center"
 				>
 					📊 View Stats
 				</a>
@@ -131,11 +133,11 @@
 								class="card p-4 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
 								style="border-left: 4px solid {routine.color}"
 							>
-								<div class="flex items-center justify-between">
-									<div class="flex items-center space-x-3">
+								<div class="flex items-center justify-between mb-4">
+									<div class="flex items-center space-x-3 flex-1">
 										<span class="text-2xl">{routine.emoji}</span>
-										<div>
-											<h3 class="font-semibold text-surface-900 dark:text-surface-100">
+										<div class="flex-1">
+											<h3 class="font-semibold text-surface-900 dark:text-surface-100 text-lg">
 												{routine.name}
 											</h3>
 											{#if routine.notes}
@@ -145,26 +147,27 @@
 											{/if}
 										</div>
 									</div>
-									<div class="flex space-x-2">
-										<a 
-											href="/routines/{routine.id}/run" 
-											class="btn variant-filled-primary btn-sm"
-										>
-											▶️ Start
-										</a>
-										<a 
-											href="/routines/{routine.id}/edit" 
-											class="btn variant-outline btn-sm"
-										>
-											✏️ Edit
-										</a>
-										<button 
-											onclick={() => deleteRoutine(routine.id)}
-											class="btn variant-outline-error btn-sm"
-										>
-											🗑️
-										</button>
-									</div>
+								</div>
+								<!-- Mobile-friendly button layout -->
+								<div class="flex flex-col sm:flex-row gap-3">
+									<a 
+										href="/routines/{routine.id}/run" 
+										class="btn preset-filled-primary-500 text-lg py-4 px-6 rounded-xl font-semibold shadow-md flex-1"
+									>
+									<Play />
+									</a>
+									<a 
+										href="/routines/{routine.id}/edit" 
+										class="btn preset-filled-surface-500 py-3 px-5 rounded-xl"
+									>
+										<SquarePen /> 
+									</a>
+									<button 
+										onclick={() => deleteRoutine(routine.id)}
+										class="btn preset-filled-surface-500 py-3 px-5 rounded-xl"
+									>
+										<Trash />
+									</button>
 								</div>
 							</div>
 						{/each}
@@ -182,11 +185,11 @@
 					<div class="grid gap-3">
 						{#each ROUTINE_TEMPLATES as template}
 							<div class="card p-4 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
-								<div class="flex items-center justify-between">
-									<div class="flex items-center space-x-3">
-										<span class="text-xl">{template.emoji}</span>
+								<div class="flex items-center justify-between mb-3">
+									<div class="flex items-center space-x-3 flex-1">
+										<span class="text-2xl">{template.emoji}</span>
 										<div>
-											<h4 class="font-medium text-surface-900 dark:text-surface-100">
+											<h4 class="font-medium text-surface-900 dark:text-surface-100 text-lg">
 												{template.name}
 											</h4>
 											<p class="text-sm text-surface-600 dark:text-surface-300">
@@ -194,13 +197,13 @@
 											</p>
 										</div>
 									</div>
-									<button 
-										onclick={() => createFromTemplate(template)}
-										class="btn variant-outline btn-sm"
-									>
-										+ Add
-									</button>
 								</div>
+								<button 
+									onclick={() => createFromTemplate(template)}
+									class="btn preset-filled-surface-500 w-full py-3 px-4 rounded-xl text-lg font-semibold"
+								>
+									<Plus /> Create from Template
+								</button>
 							</div>
 						{/each}
 					</div>

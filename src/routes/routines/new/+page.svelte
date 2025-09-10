@@ -146,7 +146,7 @@
 					Build a custom routine that works for you
 				</p>
 			</div>
-			<a href="/" class="btn variant-outline">
+			<a href="/" class="btn preset-outlined-primary-500 py-3 px-6 rounded-xl text-lg">
 				← Back to Dashboard
 			</a>
 		</div>
@@ -227,7 +227,7 @@
 					<h2 class="text-xl font-semibold text-surface-900 dark:text-surface-100">
 						Steps ({steps.length})
 					</h2>
-					<button onclick={addStep} class="btn variant-outline btn-sm">
+					<button onclick={addStep} class="btn preset-outlined-primary-500 py-3 px-6 rounded-xl text-lg">
 						+ Add Step
 					</button>
 				</div>
@@ -239,24 +239,24 @@
 								<h3 class="font-medium text-surface-900 dark:text-surface-100">
 									Step {index + 1}
 								</h3>
-								<div class="flex items-center space-x-2">
+								<div class="flex items-center space-x-3">
 									<button
 										onclick={() => moveStep(index, 'up')}
-										class="btn variant-outline btn-sm"
+										class="btn preset-outlined-primary-500 py-2 px-4 rounded-lg text-lg"
 										disabled={index === 0}
 									>
 										↑
 									</button>
 									<button
 										onclick={() => moveStep(index, 'down')}
-										class="btn variant-outline btn-sm"
+										class="btn preset-outlined-primary-500 py-2 px-4 rounded-lg text-lg"
 										disabled={index === steps.length - 1}
 									>
 										↓
 									</button>
 									<button
 										onclick={() => removeStep(index)}
-										class="btn variant-outline-error btn-sm"
+										class="btn preset-outlined-primary-500-error py-2 px-4 rounded-lg text-lg"
 										disabled={steps.length === 1}
 									>
 										🗑️
@@ -286,7 +286,6 @@
 										<input
 											bind:value={step.emoji}
 											type="text"
-											placeholder="📝"
 											class="input w-full text-center"
 											maxlength="2"
 										/>
@@ -343,7 +342,7 @@
 												<span class="flex-1 text-surface-900 dark:text-surface-100">{item}</span>
 												<button
 													onclick={() => removeChecklistItem(index, itemIndex)}
-													class="btn variant-outline-error btn-sm"
+													class="btn preset-outlined-primary-500-error btn-sm"
 												>
 													×
 												</button>
@@ -359,7 +358,7 @@
 											/>
 											<button
 												onclick={() => addChecklistItem(index)}
-												class="btn variant-outline btn-sm"
+												class="btn preset-outlined-primary-500 btn-sm"
 											>
 												Add
 											</button>
@@ -433,14 +432,14 @@
 				<div class="mt-6 space-y-3">
 					<button
 						onclick={saveRoutine}
-						class="btn variant-filled-primary btn-lg w-full"
+						class="btn preset-filled-primary-500 btn-lg w-full"
 						disabled={saving}
 					>
 						{saving ? 'Saving...' : 'Save Routine'}
 					</button>
 					<a
 						href="/"
-						class="btn variant-outline btn-lg w-full"
+						class="btn preset-outlined-primary-500 btn-lg w-full"
 					>
 						Cancel
 					</a>
