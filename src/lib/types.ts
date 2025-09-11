@@ -78,6 +78,19 @@ export interface TimerState {
     pausedTime?: Date;
 }
 
+// Form interface for editing steps
+export interface EditableStep {
+    id?: string;
+    name: string;
+    emoji: string;
+    description: string;
+    durationMinutes: number;
+    durationSeconds: number;
+    checklist: string[];
+    tempChecklistItem: string;
+    order: number;
+}
+
 // Color palette for routines
 export const ROUTINE_COLORS = [
     '#ef4444', // red

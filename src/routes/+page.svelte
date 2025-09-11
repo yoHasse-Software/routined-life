@@ -5,7 +5,7 @@
 	import { ROUTINE_TEMPLATES } from '$lib/RoutineTemplates';
 	import { formatDuration } from '$lib/Utilities';
 	import type { Routine, Session, SessionStatus } from '$lib/types';
-	import { Play, Plus, SquarePen, Trash } from '@lucide/svelte';
+	import { Play, Plus, SquarePen } from '@lucide/svelte';
 
 	
 	let routines = $state<Routine[]>([]);
@@ -53,13 +53,6 @@
 		}
 		
 		await loadData();
-	}
-	
-	async function deleteRoutine(id: string) {
-		if (confirm('Are you sure you want to delete this routine?')) {
-			await dataStore.deleteRoutine(id);
-			await loadData();
-		}
 	}
 	
 	function getStatusColor(status: SessionStatus): string {
@@ -162,12 +155,6 @@
 									>
 										<SquarePen /> 
 									</a>
-									<button 
-										onclick={() => deleteRoutine(routine.id)}
-										class="btn preset-filled-surface-500 py-3 px-5 rounded-xl"
-									>
-										<Trash />
-									</button>
 								</div>
 							</div>
 						{/each}

@@ -3,7 +3,8 @@
 	import { dataStore } from '$lib/DataStoreService';
 	import { ROUTINE_COLORS } from '$lib/types';
 	import { formatTime } from '$lib/Utilities.js';
-	import type { Routine, Step } from '$lib/types';
+	import type { Routine, Step, EditableStep } from '$lib/types';
+	import StepsEditor from '$lib/components/StepsEditor.svelte';
 	
 	let routine = $state({
 		name: '',
@@ -12,27 +13,21 @@
 		notes: ''
 	});
 	
-	let steps = $state<Array<{
-		name: string;
-		emoji: string;
-		description: string;
-		durationMinutes: number;
-		durationSeconds: number;
-		checklist: string[];
-		tempChecklistItem: string;
-	}>>([{
+	let steps = $state<EditableStep[]>([{
 		name: '',
 		emoji: '📝',
 		description: '',
 		durationMinutes: 5,
 		durationSeconds: 0,
 		checklist: [],
-		tempChecklistItem: ''
+		tempChecklistItem: '',
+		order: 0
 	}]);
 	
 	let saving = $state(false);
 	
 	function addStep() {
+		const newOrder = steps.length > 0 ? Math.max(...steps.map(s => s.order)) + 1 : 0;
 		steps.push({
 			name: '',
 			emoji: '📝',
@@ -40,13 +35,22 @@
 			durationMinutes: 5,
 			durationSeconds: 0,
 			checklist: [],
-			tempChecklistItem: ''
+			tempChecklistItem: '',
+			order: newOrder
 		});
 	}
 	
 	function removeStep(index: number) {
 		if (steps.length > 1) {
 			steps.splice(index, 1);
+		}
+	}
+	
+	function moveStep(index: number, direction: 'up' | 'down') {
+		if (direction === 'up' && index > 0) {
+			[steps[index], steps[index - 1]] = [steps[index - 1], steps[index]];
+		} else if (direction === 'down' && index < steps.length - 1) {
+			[steps[index], steps[index + 1]] = [steps[index + 1], steps[index]];
 		}
 	}
 	
@@ -60,14 +64,6 @@
 	
 	function removeChecklistItem(stepIndex: number, itemIndex: number) {
 		steps[stepIndex].checklist.splice(itemIndex, 1);
-	}
-	
-	function moveStep(index: number, direction: 'up' | 'down') {
-		if (direction === 'up' && index > 0) {
-			[steps[index], steps[index - 1]] = [steps[index - 1], steps[index]];
-		} else if (direction === 'down' && index < steps.length - 1) {
-			[steps[index], steps[index + 1]] = [steps[index + 1], steps[index]];
-		}
 	}
 	
 	async function saveRoutine() {
@@ -146,7 +142,7 @@
 					Build a custom routine that works for you
 				</p>
 			</div>
-			<a href="/" class="btn preset-outlined-primary-500 py-3 px-6 rounded-xl text-lg">
+			<a href="/" class="btn preset-filled-surface-500 py-3 px-6 rounded-xl text-lg">
 				← Back to Dashboard
 			</a>
 		</div>
@@ -163,10 +159,11 @@
 				
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
+						<label for="routine-name" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
 							Name *
 						</label>
 						<input
+							id="routine-name"
 							bind:value={routine.name}
 							type="text"
 							placeholder="e.g., Morning Routine"
@@ -177,10 +174,11 @@
 					
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
+							<label for="routine-emoji" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
 								Emoji
 							</label>
 							<input
+								id="routine-emoji"
 								bind:value={routine.emoji}
 								type="text"
 								placeholder="⭐"
@@ -190,28 +188,32 @@
 						</div>
 						
 						<div>
-							<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-								Color
-							</label>
-							<div class="flex flex-wrap gap-2">
-								{#each ROUTINE_COLORS as color}
-									<button
-										type="button"
-										onclick={() => routine.color = color}
-										class="w-8 h-8 rounded-full border-2 transition-all
-											{routine.color === color ? 'border-surface-900 dark:border-surface-100 scale-110' : 'border-surface-300 dark:border-surface-600'}"
-										style="background-color: {color}"
-									></button>
-								{/each}
-							</div>
+							<fieldset>
+								<legend class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
+									Color
+								</legend>
+								<div class="flex flex-wrap gap-2">
+									{#each ROUTINE_COLORS as color}
+										<button
+											type="button"
+											aria-label="Select color {color}"
+											onclick={() => routine.color = color}
+											class="w-8 h-8 rounded-full border-2 transition-all
+												{routine.color === color ? 'border-surface-900 dark:border-surface-100 scale-110' : 'border-surface-300 dark:border-surface-600'}"
+											style="background-color: {color}"
+										></button>
+									{/each}
+								</div>
+							</fieldset>
 						</div>
 					</div>
 					
 					<div>
-						<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
+						<label for="routine-notes" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
 							Notes (optional)
 						</label>
 						<textarea
+							id="routine-notes"
 							bind:value={routine.notes}
 							placeholder="Additional notes about this routine..."
 							class="textarea w-full"
@@ -222,154 +224,14 @@
 			</section>
 
 			<!-- Steps -->
-			<section class="card p-6 bg-surface-100 dark:bg-surface-800">
-				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-xl font-semibold text-surface-900 dark:text-surface-100">
-						Steps ({steps.length})
-					</h2>
-					<button onclick={addStep} class="btn preset-outlined-primary-500 py-3 px-6 rounded-xl text-lg">
-						+ Add Step
-					</button>
-				</div>
-				
-				<div class="space-y-6">
-					{#each steps as step, index (index)}
-						<div class="border border-surface-300 dark:border-surface-600 rounded-lg p-4">
-							<div class="flex items-center justify-between mb-4">
-								<h3 class="font-medium text-surface-900 dark:text-surface-100">
-									Step {index + 1}
-								</h3>
-								<div class="flex items-center space-x-3">
-									<button
-										onclick={() => moveStep(index, 'up')}
-										class="btn preset-outlined-primary-500 py-2 px-4 rounded-lg text-lg"
-										disabled={index === 0}
-									>
-										↑
-									</button>
-									<button
-										onclick={() => moveStep(index, 'down')}
-										class="btn preset-outlined-primary-500 py-2 px-4 rounded-lg text-lg"
-										disabled={index === steps.length - 1}
-									>
-										↓
-									</button>
-									<button
-										onclick={() => removeStep(index)}
-										class="btn preset-outlined-primary-500-error py-2 px-4 rounded-lg text-lg"
-										disabled={steps.length === 1}
-									>
-										🗑️
-									</button>
-								</div>
-							</div>
-							
-							<div class="grid gap-4">
-								<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-									<div class="md:col-span-2">
-										<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-											Name *
-										</label>
-										<input
-											bind:value={step.name}
-											type="text"
-											placeholder="e.g., Brush teeth"
-											class="input w-full"
-											required
-										/>
-									</div>
-									
-									<div>
-										<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-											Emoji
-										</label>
-										<input
-											bind:value={step.emoji}
-											type="text"
-											class="input w-full text-center"
-											maxlength="2"
-										/>
-									</div>
-								</div>
-								
-								<div>
-									<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-										Description (optional)
-									</label>
-									<input
-										bind:value={step.description}
-										type="text"
-										placeholder="Additional details..."
-										class="input w-full"
-									/>
-								</div>
-								
-								<div>
-									<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-										Duration
-									</label>
-									<div class="flex items-center space-x-2">
-										<input
-											bind:value={step.durationMinutes}
-											type="number"
-											min="0"
-											max="60"
-											class="input w-20"
-										/>
-										<span class="text-surface-600 dark:text-surface-300">min</span>
-										<input
-											bind:value={step.durationSeconds}
-											type="number"
-											min="0"
-											max="59"
-											class="input w-20"
-										/>
-										<span class="text-surface-600 dark:text-surface-300">sec</span>
-										<span class="text-sm text-surface-500 dark:text-surface-400 ml-4">
-											({formatTime((step.durationMinutes * 60) + step.durationSeconds)})
-										</span>
-									</div>
-								</div>
-								
-								<div>
-									<label class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-										Checklist (optional)
-									</label>
-									<div class="space-y-2">
-										{#each step.checklist as item, itemIndex}
-											<div class="flex items-center space-x-2">
-												<span class="text-surface-600 dark:text-surface-300">•</span>
-												<span class="flex-1 text-surface-900 dark:text-surface-100">{item}</span>
-												<button
-													onclick={() => removeChecklistItem(index, itemIndex)}
-													class="btn preset-outlined-primary-500-error btn-sm"
-												>
-													×
-												</button>
-											</div>
-										{/each}
-										<div class="flex items-center space-x-2">
-											<input
-												bind:value={step.tempChecklistItem}
-												onkeydown={(e) => e.key === 'Enter' && addChecklistItem(index)}
-												type="text"
-												placeholder="Add checklist item..."
-												class="input flex-1"
-											/>
-											<button
-												onclick={() => addChecklistItem(index)}
-												class="btn preset-outlined-primary-500 btn-sm"
-											>
-												Add
-											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</section>
+			<StepsEditor 
+				bind:steps={steps} 
+				onAddStep={addStep}
+				onRemoveStep={removeStep}
+				onMoveStep={moveStep}
+				onAddChecklistItem={addChecklistItem}
+				onRemoveChecklistItem={removeChecklistItem}
+			/>
 		</div>
 
 		<!-- Preview Sidebar -->

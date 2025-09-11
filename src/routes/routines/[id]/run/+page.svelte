@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount, onDestroy } from 'svelte';
 	import { dataStore } from '$lib/DataStoreService';
@@ -8,7 +8,7 @@
 	import type { Routine, Step, Session, SessionStep, TimerState } from '$lib/types';
 	import { Check, Pause, Play, SkipForward, RotateCcw } from '@lucide/svelte';
 
-	const routineId = $page.params.id;
+	const routineId = page.params.id;
 	
 	let routine = $state<Routine | null>(null);
 	let steps = $state<Step[]>([]);
@@ -290,7 +290,7 @@
 						</button>
 						<a
 							href="/"
-							class="btn preset-outlined-primary-500 w-full text-lg py-4 px-6 rounded-xl"
+							class="btn preset-filled-surface-500 w-full text-lg py-4 px-6 rounded-xl"
 						>
 							← Back to Dashboard
 						</a>
@@ -337,7 +337,7 @@
 						</button>
 						<a
 							href="/"
-							class="btn preset-outlined-primary-500 w-full text-lg py-4 px-6 rounded-xl"
+							class="btn preset-filled-surface-500 w-full text-lg py-4 px-6 rounded-xl"
 						>
 							← Back to Dashboard
 						</a>
