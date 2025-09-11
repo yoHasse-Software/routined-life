@@ -1,16 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	
+	import { Accordion } from '@skeletonlabs/skeleton-svelte';
 	import { dataStore } from '$lib/DataStoreService.js';
 	import { formatDuration, formatTime } from '$lib/Utilities';
 	import type { Routine, Session, SessionStatus, Step } from '$lib/types';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
+    import { Clock } from '@lucide/svelte';
 
 	
 	let routines = $state<Routine[]>([]);
 	let recentSessions = $state<Session[]>([]);
 	let routineStats = $state<Map<string, {stepCount: number, totalDuration: number}>>(new Map());
 	let loading = $state(true);
+
+	let value = $state(['recent']);
 	
 	onMount(async () => {
 		await loadData();
@@ -43,6 +46,7 @@
 			default: return 'text-primary-500';
 		}
 	}
+
 </script>
 
 <svelte:head>
@@ -119,10 +123,13 @@
 			</section>
 
 			<!-- Recent Activity -->
-			<section>
-				<h2 class="text-2xl font-semibold mb-4 text-surface-900 dark:text-surface-100">
-					Recent Activity
-				</h2>
+			<Accordion {value} onValueChange={(e) => (value = e.value)} collapsible>
+			 	<Accordion.Item value="recent">
+					{#snippet lead()}<Clock />{/snippet}
+					{#snippet control()}Recent Activity{/snippet}
+					{#snippet panel()}
+								<section>
+
 				{#if recentSessions.length === 0}
 					<div class="card p-4 text-center bg-surface-100 dark:bg-surface-800">
 						<p class="text-surface-600 dark:text-surface-300">
@@ -164,6 +171,10 @@
 					</div>
 				{/if}
 			</section>
+					{/snippet}
+				</Accordion.Item>
+			</Accordion>
+
 		</div>
 	{/if}
 </div>

@@ -88,7 +88,7 @@
 	}
 
 	function getRecentSessions() {
-		return sessions
+		return [...sessions]
 			.sort((a, b) => b.startTimestamp.getTime() - a.startTimestamp.getTime())
 			.slice(0, 10);
 	}
