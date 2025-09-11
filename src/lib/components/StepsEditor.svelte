@@ -27,7 +27,71 @@
     function checkListChanged(e: any) {
         checklistValue = e.value;
     }
+	
+	// Handle mouse wheel scrolling for horizontal containers
+	function handleWheel(event: WheelEvent) {
+		const container = event.currentTarget as HTMLElement;
+		
+		// Prevent default vertical scroll
+		event.preventDefault();
+		
+		// Convert vertical wheel movement to horizontal scroll
+		const scrollAmount = event.deltaY || event.deltaX;
+		container.scrollLeft += scrollAmount;
+	}
+	
+	// Handle mouse drag scrolling
+	let isDragging = $state(false);
+	let startX = $state(0);
+	let scrollLeft = $state(0);
+	
+	function handleMouseDown(event: MouseEvent) {
+		const container = event.currentTarget as HTMLElement;
+		isDragging = true;
+		startX = event.pageX - container.offsetLeft;
+		scrollLeft = container.scrollLeft;
+		container.style.cursor = 'grabbing';
+	}
+	
+	function handleMouseMove(event: MouseEvent) {
+		if (!isDragging) return;
+		event.preventDefault();
+		
+		const container = event.currentTarget as HTMLElement;
+		const x = event.pageX - container.offsetLeft;
+		const walk = (x - startX) * 2; // Scroll speed multiplier
+		container.scrollLeft = scrollLeft - walk;
+	}
+	
+	function handleMouseUp(event: MouseEvent) {
+		const container = event.currentTarget as HTMLElement;
+		isDragging = false;
+		container.style.cursor = 'grab';
+	}
+	
+	function handleMouseLeave(event: MouseEvent) {
+		const container = event.currentTarget as HTMLElement;
+		isDragging = false;
+		container.style.cursor = 'grab';
+	}
 </script>
+
+<style>
+	.scrollbar-hide {
+		-ms-overflow-style: none;  /* IE and Edge */
+		scrollbar-width: none;  /* Firefox */
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;  /* Chrome, Safari and Opera */
+	}
+
+    .wheel-container {
+        scroll-behavior: smooth;
+        cursor: grab;
+        user-select: none;
+    }
+    
+</style>
 
 <!-- Steps -->
 <section class="card p-6 bg-surface-100 dark:bg-surface-800">
@@ -99,22 +163,65 @@
                     {/if}
 					
 					<div>
-						<label for="step-duration-{index}" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
+						<span class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
 							Duration (minutes)
-						</label>
-						<div class="flex items-center space-x-2">
-							<select
-								id="step-duration-{index}"
-								bind:value={step.durationMinutes}
-								class="select w-32"
-							>
-								{#each Array.from({length: 61}, (_, i) => i) as minute}
-									<option value={minute}>{minute} min</option>
-								{/each}
-							</select>
-							<span class="text-sm text-surface-500 dark:text-surface-400 ml-4">
-								({formatTime(step.durationMinutes * 60)})
-							</span>
+						</span>
+						<div class="flex flex-col items-center justify-center">
+							<!-- Fixed-width container to prevent overflow -->
+							<div class="relative w-80 max-w-full h-16 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-300 dark:border-surface-600 overflow-hidden">
+								<!-- Selection indicator (fixed center line) -->
+								<div class="absolute top-0 bottom-0 left-1/2 w-12 bg-primary-500/10 border-x-2 border-primary-500/30 pointer-events-none z-10 transform -translate-x-1/2"></div>
+								
+								<!-- Horizontal scrollable wheel -->
+								<div 
+									class="h-full overflow-x-auto scrollbar-hide flex items-center"
+									style="scroll-snap-type: x mandatory; touch-action: pan-x; cursor: grab; user-select: none;"
+									role="slider"
+									tabindex="0"
+									aria-label="Select duration in minutes"
+									aria-valuenow={step.durationMinutes}
+									aria-valuemin="0"
+									aria-valuemax="60"
+									onwheel={handleWheel}
+									onmousedown={handleMouseDown}
+									onmousemove={handleMouseMove}
+									onmouseup={handleMouseUp}
+									onmouseleave={handleMouseLeave}
+								>
+									<!-- Padding left to center first item -->
+									<div style="min-width: 152px; flex-shrink: 0;"></div>
+									
+									{#each Array.from({length: 61}, (_, i) => i) as minute}
+										<button
+											type="button"
+											onclick={() => step.durationMinutes = minute}
+											class="flex-shrink-0 w-12 h-full flex items-center justify-center text-lg font-medium cursor-pointer hover:bg-primary-500/5
+												{step.durationMinutes === minute 
+													? 'text-primary-600 dark:text-primary-400 font-bold' 
+													: 'text-surface-600 dark:text-surface-400'}"
+											style="scroll-snap-align: center;"
+										>
+											{minute}
+										</button>
+									{/each}
+									
+									<!-- Padding right to center last item -->
+									<div style="min-width: 152px; flex-shrink: 0;"></div>
+								</div>
+								
+								<!-- Fade gradients at left and right -->
+								<div class="absolute top-0 bottom-0 left-0 w-12 bg-gradient-to-r from-surface-50 dark:from-surface-800 to-transparent pointer-events-none"></div>
+								<div class="absolute top-0 bottom-0 right-0 w-12 bg-gradient-to-l from-surface-50 dark:from-surface-800 to-transparent pointer-events-none"></div>
+							</div>
+							
+							<div class="mt-3 text-center">
+								<div class="text-sm text-surface-500 dark:text-surface-400">
+									{step.durationMinutes} minutes
+								</div>
+								<div class="text-xs text-surface-400 dark:text-surface-500">
+									{formatTime(step.durationMinutes * 60)}
+								</div>
+							</div>
 						</div>
 					</div>
 

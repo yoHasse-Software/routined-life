@@ -264,7 +264,6 @@
 								{#each steps as step, index}
 									<div class="flex items-center space-x-2 text-sm">
 										<span class="text-surface-500 dark:text-surface-400">{index + 1}.</span>
-										<span>{step.emoji}</span>
 										<span class="flex-1 text-surface-900 dark:text-surface-100">
 											{step.name || 'Untitled Step'}
 										</span>
