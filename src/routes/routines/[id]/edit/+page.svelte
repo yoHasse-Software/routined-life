@@ -54,10 +54,8 @@
 		steps = originalSteps.map(step => ({
 			id: step.id,
 			name: step.name,
-			emoji: step.emoji || '📝',
 			description: step.description || '',
 			durationMinutes: Math.floor(step.durationSeconds / 60),
-			durationSeconds: step.durationSeconds % 60,
 			checklist: [...step.checklist],
 			tempChecklistItem: '',
 			order: step.order
@@ -72,10 +70,8 @@
 	function addStep() {
 		steps.push({
 			name: '',
-			emoji: '📝',
 			description: '',
 			durationMinutes: 5,
-			durationSeconds: 0,
 			checklist: [],
 			tempChecklistItem: '',
 			order: steps.length
@@ -161,9 +157,8 @@
 					id: step.id || dataStore.generateId(),
 					routineId: routineId!,
 					name: step.name.trim(),
-					emoji: step.emoji,
 					description: step.description.trim(),
-					durationSeconds: (step.durationMinutes * 60) + step.durationSeconds,
+					durationSeconds: step.durationMinutes * 60,
 					checklist: step.checklist,
 					order: i
 				};
@@ -199,7 +194,7 @@
 	
 	function getTotalDuration() {
 		return steps.reduce((total, step) => {
-			return total + (step.durationMinutes * 60) + step.durationSeconds;
+			return total + (step.durationMinutes * 60);
 		}, 0);
 	}
 </script>

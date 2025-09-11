@@ -13,7 +13,6 @@ export interface Routine {
 export interface Step {
     id: string;
     routineId: string;
-    emoji?: string;
     name: string;
     description?: string;
     durationSeconds: number;
@@ -82,10 +81,8 @@ export interface TimerState {
 export interface EditableStep {
     id?: string;
     name: string;
-    emoji: string;
     description: string;
     durationMinutes: number;
-    durationSeconds: number;
     checklist: string[];
     tempChecklistItem: string;
     order: number;

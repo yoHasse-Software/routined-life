@@ -16,10 +16,8 @@
 	
 	let steps = $state<EditableStep[]>([{
 		name: '',
-		emoji: '📝',
 		description: '',
 		durationMinutes: 5,
-		durationSeconds: 0,
 		checklist: [],
 		tempChecklistItem: '',
 		order: 0
@@ -31,10 +29,8 @@
 		const newOrder = steps.length > 0 ? Math.max(...steps.map(s => s.order)) + 1 : 0;
 		steps.push({
 			name: '',
-			emoji: '📝',
 			description: '',
 			durationMinutes: 5,
-			durationSeconds: 0,
 			checklist: [],
 			tempChecklistItem: '',
 			order: newOrder
@@ -101,9 +97,8 @@
 					id: dataStore.generateId(),
 					routineId,
 					name: step.name.trim(),
-					emoji: step.emoji,
 					description: step.description.trim(),
-					durationSeconds: (step.durationMinutes * 60) + step.durationSeconds,
+					durationSeconds: step.durationMinutes * 60,
 					checklist: step.checklist,
 					order: i
 				};
@@ -122,7 +117,7 @@
 	
 	function getTotalDuration() {
 		return steps.reduce((total, step) => {
-			return total + (step.durationMinutes * 60) + step.durationSeconds;
+			return total + (step.durationMinutes * 60);
 		}, 0);
 	}
 </script>
@@ -274,7 +269,7 @@
 											{step.name || 'Untitled Step'}
 										</span>
 										<span class="text-surface-600 dark:text-surface-300">
-											{formatTime((step.durationMinutes * 60) + step.durationSeconds)}
+											{formatTime(step.durationMinutes * 60)}
 										</span>
 									</div>
 								{/each}

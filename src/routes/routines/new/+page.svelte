@@ -26,8 +26,7 @@
 			await dataStore.saveStep({
 				id: dataStore.generateId(),
 				routineId,
-				name: step.name,
-				emoji: step.emoji,
+				name: `${step.emoji} ${step.name}`,
 				description: step.description,
 				durationSeconds: step.durationSeconds,
 				checklist: step.checklist,
@@ -112,7 +111,6 @@
 							<ul class="text-sm text-surface-600 dark:text-surface-400 space-y-1">
 								{#each template.steps.slice(0, 3) as step}
 									<li class="flex items-center">
-										<span class="mr-2">{step.emoji}</span>
 										{step.name}
 									</li>
 								{/each}

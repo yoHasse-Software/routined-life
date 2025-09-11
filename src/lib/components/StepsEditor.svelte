@@ -2,6 +2,7 @@
 	import { formatTime } from '$lib/Utilities';
 	import type { EditableStep } from '$lib/types';
     import { ChevronDown, ChevronUp, Plus, SquareCheck, Trash } from '@lucide/svelte';
+    import { Accordion } from '@skeletonlabs/skeleton-svelte';
 	
 	interface Props {
 		steps: EditableStep[];
@@ -20,6 +21,12 @@
 		onAddChecklistItem,
 		onRemoveChecklistItem
 	}: Props = $props();
+
+    let checklistValue = $state(['none']);
+
+    function checkListChanged(e: any) {
+        checklistValue = e.value;
+    }
 </script>
 
 <!-- Steps -->
@@ -28,9 +35,6 @@
 		<h2 class="text-xl font-semibold text-surface-900 dark:text-surface-100">
 			Steps ({steps.length})
 		</h2>
-		<button onclick={onAddStep} class="btn preset-filled-secondary-500 py-3 px-6 rounded-xl text-lg">
-			<Plus /> Add Step
-		</button>
 	</div>
 	
 	<div class="space-y-6">
@@ -66,33 +70,18 @@
 				</div>
 				
 				<div class="grid gap-4">
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-						<div class="md:col-span-2">
-							<label for="step-name-{index}" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-								Name *
-							</label>
-							<input
-								id="step-name-{index}"
-								bind:value={step.name}
-								type="text"
-								placeholder="e.g., Brush teeth"
-								class="input w-full"
-								required
-							/>
-						</div>
-						
-						<div>
-							<label for="step-emoji-{index}" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-								Emoji
-							</label>
-							<input
-								id="step-emoji-{index}"
-								bind:value={step.emoji}
-								type="text"
-								class="input w-full text-center"
-								maxlength="2"
-							/>
-						</div>
+					<div>
+						<label for="step-name-{index}" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
+							Name *
+						</label>
+						<input
+							id="step-name-{index}"
+							bind:value={step.name}
+							type="text"
+							placeholder="e.g., 🦷 Brush teeth"
+							class="input w-full"
+							required
+						/>
 					</div>
 					{#if false} <!-- Description field is currently disabled -->
 					<div>
@@ -110,39 +99,30 @@
                     {/if}
 					
 					<div>
-						<label for="step-duration-min-{index}" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-							Duration
+						<label for="step-duration-{index}" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
+							Duration (minutes)
 						</label>
 						<div class="flex items-center space-x-2">
-							<input
-								id="step-duration-min-{index}"
+							<select
+								id="step-duration-{index}"
 								bind:value={step.durationMinutes}
-								type="number"
-								min="0"
-								max="60"
-								class="input w-20"
-							/>
-							<span class="text-surface-600 dark:text-surface-300">min</span>
-							<input
-								id="step-duration-sec-{index}"
-								bind:value={step.durationSeconds}
-								type="number"
-								min="0"
-								max="59"
-								class="input w-20"
-							/>
-							<span class="text-surface-600 dark:text-surface-300">sec</span>
+								class="select w-32"
+							>
+								{#each Array.from({length: 61}, (_, i) => i) as minute}
+									<option value={minute}>{minute} min</option>
+								{/each}
+							</select>
 							<span class="text-sm text-surface-500 dark:text-surface-400 ml-4">
-								({formatTime((step.durationMinutes * 60) + step.durationSeconds)})
+								({formatTime(step.durationMinutes * 60)})
 							</span>
 						</div>
 					</div>
-					
-					<div>
-						<label for="step-checklist-{index}" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
-							Checklist (optional)
-						</label>
-						<div class="space-y-2">
+
+                    <Accordion value={checklistValue} onValueChange={checkListChanged} collapsible>
+                        <Accordion.Item value="step-checklist-{index + 1}">
+                            {#snippet control()}Checklist (optional){/snippet}
+                            {#snippet panel()}
+                            <div class="space-y-2">
 							{#each step.checklist as item, itemIndex}
 								<div class="flex items-center space-x-2">
 									<span class="text-surface-600 dark:text-surface-300">
@@ -174,9 +154,18 @@
 								</button>
 							</div>
 						</div>
-					</div>
+                            {/snippet}
+
+                        </Accordion.Item>
+                    </Accordion>
 				</div>
 			</div>
 		{/each}
 	</div>
+    <div class="flex justify-center mt-6">
+
+        <button onclick={onAddStep} class="btn preset-filled-secondary-500 py-3 px-6 rounded-xl text-lg">
+			<Plus /> Add Step
+		</button>
+    </div>
 </section>
