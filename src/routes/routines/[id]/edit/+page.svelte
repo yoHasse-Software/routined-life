@@ -292,6 +292,7 @@
 							</div>
 						</div>
 						
+                        {#if false} <!-- Notes are currently not editable -->
 						<div>
 							<label for="routine-notes" class="block text-sm font-medium mb-2 text-surface-700 dark:text-surface-300">
 								Notes (optional)
@@ -304,6 +305,7 @@
 								rows="3"
 							></textarea>
 						</div>
+                        {/if}
 					</div>
 				</section>
 

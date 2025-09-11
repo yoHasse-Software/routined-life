@@ -74,6 +74,57 @@
 		isDragging = false;
 		container.style.cursor = 'grab';
 	}
+	
+	// Calculate which minute is currently centered and auto-select it
+	function updateSelectedMinute(container: HTMLElement, stepIndex: number) {
+		const containerWidth = container.offsetWidth;
+		const scrollLeft = container.scrollLeft;
+		const centerPosition = scrollLeft + containerWidth / 2;
+		
+		// Each button is 48px wide (w-12 = 3rem = 48px)
+		const buttonWidth = 48;
+		const paddingWidth = 152; // Padding on left to center first item
+		
+		// Calculate which button is in the center
+		const buttonIndex = Math.round((centerPosition - paddingWidth) / buttonWidth);
+		const selectedMinute = Math.max(0, Math.min(60, buttonIndex));
+		
+		// Update the step's duration if it's different
+		if (steps[stepIndex].durationMinutes !== selectedMinute) {
+			steps[stepIndex].durationMinutes = selectedMinute;
+		}
+	}
+	
+	// Handle scroll events to auto-select centered value
+	function handleScroll(event: Event, stepIndex: number) {
+		const container = event.currentTarget as HTMLElement;
+		updateSelectedMinute(container, stepIndex);
+	}
+	
+	// Handle wheel with auto-selection
+	function handleWheelWithSelection(event: WheelEvent, stepIndex: number) {
+		const container = event.currentTarget as HTMLElement;
+		
+		// Prevent default vertical scroll
+		event.preventDefault();
+		
+		// Convert vertical wheel movement to horizontal scroll
+		const scrollAmount = event.deltaY || event.deltaX;
+		container.scrollLeft += scrollAmount;
+		
+		// Update selection after a short delay to let scroll settle
+		setTimeout(() => updateSelectedMinute(container, stepIndex), 50);
+	}
+	
+	// Handle mouse up with auto-selection
+	function handleMouseUpWithSelection(event: MouseEvent, stepIndex: number) {
+		const container = event.currentTarget as HTMLElement;
+		isDragging = false;
+		container.style.cursor = 'grab';
+		
+		// Update selection after drag ends
+		setTimeout(() => updateSelectedMinute(container, stepIndex), 50);
+	}
 </script>
 
 <style>
@@ -84,13 +135,6 @@
 	.scrollbar-hide::-webkit-scrollbar {
 		display: none;  /* Chrome, Safari and Opera */
 	}
-
-    .wheel-container {
-        scroll-behavior: smooth;
-        cursor: grab;
-        user-select: none;
-    }
-    
 </style>
 
 <!-- Steps -->
@@ -175,34 +219,37 @@
 								<!-- Horizontal scrollable wheel -->
 								<div 
 									class="h-full overflow-x-auto scrollbar-hide flex items-center"
-									style="scroll-snap-type: x mandatory; touch-action: pan-x; cursor: grab; user-select: none;"
+									style="scroll-snap-type: x mandatory; touch-action: pan-x; cursor: grab; user-select: none; scroll-behavior: smooth;"
 									role="slider"
 									tabindex="0"
 									aria-label="Select duration in minutes"
 									aria-valuenow={step.durationMinutes}
 									aria-valuemin="0"
 									aria-valuemax="60"
-									onwheel={handleWheel}
+
 									onmousedown={handleMouseDown}
 									onmousemove={handleMouseMove}
-									onmouseup={handleMouseUp}
+									onmouseup={(e) => handleMouseUpWithSelection(e, index)}
 									onmouseleave={handleMouseLeave}
 								>
 									<!-- Padding left to center first item -->
 									<div style="min-width: 152px; flex-shrink: 0;"></div>
 									
 									{#each Array.from({length: 61}, (_, i) => i) as minute}
+                                    {#if minute !== 0}
 										<button
 											type="button"
 											onclick={() => step.durationMinutes = minute}
+                                            
 											class="flex-shrink-0 w-12 h-full flex items-center justify-center text-lg font-medium cursor-pointer hover:bg-primary-500/5
 												{step.durationMinutes === minute 
 													? 'text-primary-600 dark:text-primary-400 font-bold' 
 													: 'text-surface-600 dark:text-surface-400'}"
-											style="scroll-snap-align: center;"
+											style="scroll-snap-align: center; cursor: inherit;"
 										>
 											{minute}
 										</button>
+                                    {/if}
 									{/each}
 									
 									<!-- Padding right to center last item -->
@@ -218,13 +265,10 @@
 								<div class="text-sm text-surface-500 dark:text-surface-400">
 									{step.durationMinutes} minutes
 								</div>
-								<div class="text-xs text-surface-400 dark:text-surface-500">
-									{formatTime(step.durationMinutes * 60)}
-								</div>
 							</div>
 						</div>
 					</div>
-
+                    {#if false}
                     <Accordion value={checklistValue} onValueChange={checkListChanged} collapsible>
                         <Accordion.Item value="step-checklist-{index + 1}">
                             {#snippet control()}Checklist (optional){/snippet}
@@ -265,6 +309,7 @@
 
                         </Accordion.Item>
                     </Accordion>
+                    {/if}
 				</div>
 			</div>
 		{/each}
