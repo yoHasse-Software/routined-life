@@ -2,14 +2,14 @@
 	import { onMount } from 'svelte';
 	
 	import { dataStore } from '$lib/DataStoreService.js';
-	import { ROUTINE_TEMPLATES } from '$lib/RoutineTemplates';
-	import { formatDuration } from '$lib/Utilities';
-	import type { Routine, Session, SessionStatus } from '$lib/types';
-	import { Play, Plus, SquarePen } from '@lucide/svelte';
+	import { formatDuration, formatTime } from '$lib/Utilities';
+	import type { Routine, Session, SessionStatus, Step } from '$lib/types';
+	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
 
 	
 	let routines = $state<Routine[]>([]);
 	let recentSessions = $state<Session[]>([]);
+	let routineStats = $state<Map<string, {stepCount: number, totalDuration: number}>>(new Map());
 	let loading = $state(true);
 	
 	onMount(async () => {
@@ -21,38 +21,18 @@
 		routines = await dataStore.getRoutines();
 		const sessions = await dataStore.getSessions();
 		recentSessions = sessions.slice(0, 5);
-	}
-	
-	async function createFromTemplate(template: any) {
-		const routineId = dataStore.generateId();
-		const routine: Routine = {
-			id: routineId,
-			name: template.name,
-			emoji: template.emoji,
-			color: template.color,
-			notes: '',
-			createdAt: new Date(),
-			updatedAt: new Date()
-		};
 		
-		await dataStore.saveRoutine(routine);
-		
-		// Create steps
-		for (let i = 0; i < template.steps.length; i++) {
-			const step = template.steps[i];
-			await dataStore.saveStep({
-				id: dataStore.generateId(),
-				routineId,
-				name: step.name,
-				emoji: step.emoji,
-				description: step.description,
-				durationSeconds: step.durationSeconds,
-				checklist: step.checklist,
-				order: i
+		// Load routine statistics
+		const statsMap = new Map();
+		for (const routine of routines) {
+			const steps = await dataStore.getStepsForRoutine(routine.id);
+			const totalDuration = steps.reduce((sum, step) => sum + step.durationSeconds, 0);
+			statsMap.set(routine.id, {
+				stepCount: steps.length,
+				totalDuration: totalDuration
 			});
 		}
-		
-		await loadData();
+		routineStats = statsMap;
 	}
 	
 	function getStatusColor(status: SessionStatus): string {
@@ -69,7 +49,8 @@
 	<title>Routined Life - Dashboard</title>
 </svelte:head>
 
-<div class="container mx-auto p-4 max-w-6xl">
+<!-- Main Content with bottom padding for fixed toolbar -->
+<div class="container mx-auto p-4 max-w-6xl pb-24">
 	<!-- Header -->
 	<header class="mb-8">
 		<h1 class="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">
@@ -88,24 +69,6 @@
 			</div>
 		</div>
 	{:else}
-		<!-- Quick Actions -->
-		<section class="mb-8">
-			<div class="flex flex-col sm:flex-row gap-4 mb-6">
-				<a 
-					href="/routines/new" 
-					class="btn preset-outlined-primary-500 text-xl py-6 px-8 rounded-xl font-semibold shadow-lg flex-1 text-center"
-				>
-					<Plus /> Create New Routine
-				</a>
-				<a 
-					href="/stats" 
-					class="btn preset-outlined-secondary-500 text-lg py-4 px-6 rounded-xl flex-1 text-center"
-				>
-					📊 View Stats
-				</a>
-			</div>
-		</section>
-
 		<div class="grid lg:grid-cols-2 gap-8">
 			<!-- My Routines -->
 			<section>
@@ -122,11 +85,13 @@
 				{:else}
 					<div class="space-y-4">
 						{#each routines as routine (routine.id)}
-							<div 
-								class="card p-4 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+							{@const stats = routineStats.get(routine.id)}
+							<a 
+								href="/routines/{routine.id}"
+								class="card p-4 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-all cursor-pointer hover:scale-[1.02] block"
 								style="border-left: 4px solid {routine.color}"
 							>
-								<div class="flex items-center justify-between mb-4">
+								<div class="flex items-center justify-between mb-3">
 									<div class="flex items-center space-x-3 flex-1">
 										<span class="text-2xl">{routine.emoji}</span>
 										<div class="flex-1">
@@ -134,115 +99,73 @@
 												{routine.name}
 											</h3>
 											{#if routine.notes}
-												<p class="text-sm text-surface-600 dark:text-surface-300">
+												<p class="text-sm text-surface-600 dark:text-surface-300 mb-2">
 													{routine.notes}
 												</p>
+											{/if}
+											{#if stats}
+												<div class="flex items-center space-x-4 text-sm text-surface-500 dark:text-surface-400">
+													<span>{stats.stepCount} steps</span>
+													<span>{formatTime(stats.totalDuration)}</span>
+												</div>
 											{/if}
 										</div>
 									</div>
 								</div>
-								<!-- Mobile-friendly button layout -->
-								<div class="flex flex-col sm:flex-row gap-3">
-									<a 
-										href="/routines/{routine.id}/run" 
-										class="btn preset-filled-primary-500 text-lg py-4 px-6 rounded-xl font-semibold shadow-md flex-1"
-									>
-									<Play />
-									</a>
-									<a 
-										href="/routines/{routine.id}/edit" 
-										class="btn preset-filled-surface-500 py-3 px-5 rounded-xl"
-									>
-										<SquarePen /> 
-									</a>
-								</div>
-							</div>
+							</a>
 						{/each}
 					</div>
 				{/if}
 			</section>
 
-			<!-- Templates & Recent Activity -->
+			<!-- Recent Activity -->
 			<section>
-				<!-- Templates -->
-				<div class="mb-8">
-					<h2 class="text-2xl font-semibold mb-4 text-surface-900 dark:text-surface-100">
-						Starter Templates
-					</h2>
-					<div class="grid gap-3">
-						{#each ROUTINE_TEMPLATES as template}
-							<div class="card p-4 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
-								<div class="flex items-center justify-between mb-3">
-									<div class="flex items-center space-x-3 flex-1">
-										<span class="text-2xl">{template.emoji}</span>
-										<div>
-											<h4 class="font-medium text-surface-900 dark:text-surface-100 text-lg">
-												{template.name}
-											</h4>
-											<p class="text-sm text-surface-600 dark:text-surface-300">
-												{template.steps.length} steps
+				<h2 class="text-2xl font-semibold mb-4 text-surface-900 dark:text-surface-100">
+					Recent Activity
+				</h2>
+				{#if recentSessions.length === 0}
+					<div class="card p-4 text-center bg-surface-100 dark:bg-surface-800">
+						<p class="text-surface-600 dark:text-surface-300">
+							No recent activity. Start your first routine!
+						</p>
+					</div>
+				{:else}
+					<div class="space-y-3">
+						{#each recentSessions as session (session.id)}
+							{@const routine = routines.find(r => r.id === session.routineId)}
+							{#if routine}
+								<div class="card p-3 bg-surface-100 dark:bg-surface-800">
+									<div class="flex items-center justify-between">
+										<div class="flex items-center space-x-2">
+											<span class="text-lg">{routine.emoji}</span>
+											<div>
+												<p class="font-medium text-surface-900 dark:text-surface-100">
+													{routine.name}
+												</p>
+												<p class="text-xs text-surface-600 dark:text-surface-300">
+													{session.startTimestamp.toLocaleDateString()}
+												</p>
+											</div>
+										</div>
+										<div class="text-right">
+											<p class="text-sm {getStatusColor(session.status)} font-medium">
+												{session.status.toUpperCase()}
 											</p>
+											{#if session.endTimestamp}
+												<p class="text-xs text-surface-600 dark:text-surface-300">
+													{formatDuration(Math.floor((session.endTimestamp.getTime() - session.startTimestamp.getTime()) / 1000))}
+												</p>
+											{/if}
 										</div>
 									</div>
 								</div>
-								<button 
-									onclick={() => createFromTemplate(template)}
-									class="btn preset-filled-surface-500 w-full py-3 px-4 rounded-xl text-lg font-semibold"
-								>
-									<Plus /> Create from Template
-								</button>
-							</div>
+							{/if}
 						{/each}
 					</div>
-				</div>
-
-				<!-- Recent Activity -->
-				<div>
-					<h2 class="text-2xl font-semibold mb-4 text-surface-900 dark:text-surface-100">
-						Recent Activity
-					</h2>
-					{#if recentSessions.length === 0}
-						<div class="card p-4 text-center bg-surface-100 dark:bg-surface-800">
-							<p class="text-surface-600 dark:text-surface-300">
-								No recent activity. Start your first routine!
-							</p>
-						</div>
-					{:else}
-						<div class="space-y-3">
-							{#each recentSessions as session (session.id)}
-								{@const routine = routines.find(r => r.id === session.routineId)}
-								{#if routine}
-									<div class="card p-3 bg-surface-100 dark:bg-surface-800">
-										<div class="flex items-center justify-between">
-											<div class="flex items-center space-x-2">
-												<span class="text-lg">{routine.emoji}</span>
-												<div>
-													<p class="font-medium text-surface-900 dark:text-surface-100">
-														{routine.name}
-													</p>
-													<p class="text-xs text-surface-600 dark:text-surface-300">
-														{session.startTimestamp.toLocaleDateString()}
-													</p>
-												</div>
-											</div>
-											<div class="text-right">
-												<p class="text-sm {getStatusColor(session.status)} font-medium">
-													{session.status.toUpperCase()}
-												</p>
-												{#if session.endTimestamp}
-													<p class="text-xs text-surface-600 dark:text-surface-300">
-														{formatDuration(Math.floor((session.endTimestamp.getTime() - session.startTimestamp.getTime()) / 1000))}
-													</p>
-												{/if}
-											</div>
-										</div>
-									</div>
-								{/if}
-							{/each}
-						</div>
-					{/if}
-				</div>
+				{/if}
 			</section>
 		</div>
 	{/if}
 </div>
+
+<BottomToolbar />

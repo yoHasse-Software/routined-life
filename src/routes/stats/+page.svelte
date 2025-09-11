@@ -3,6 +3,7 @@
 	import { dataStore } from '$lib/DataStoreService';
 	import { formatDuration, formatDate, getWeekStart } from '$lib/Utilities';
 	import type { Routine, Session, SessionStatus } from '$lib/types';
+	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
 
 	let routines = $state<Routine[]>([]);
 	let sessions = $state<Session[]>([]);
@@ -97,7 +98,7 @@
 	<title>Statistics - Routined Life</title>
 </svelte:head>
 
-<div class="container mx-auto p-4 max-w-6xl">
+<div class="container mx-auto p-4 max-w-6xl pb-24">
 	<!-- Header -->
 	<header class="mb-8">
 		<div class="flex items-center justify-between">
@@ -301,3 +302,5 @@
 		{/if}
 	{/if}
 </div>
+
+<BottomToolbar />
