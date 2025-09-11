@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { dataStore } from '$lib/DataStoreService';
 	import { formatTime } from '$lib/Utilities.js';
@@ -145,30 +146,11 @@
 			</div>
 		</section>
 
-		<!-- Start Button -->
-		<div class="grid grid-cols-3 items-center">
-			<!-- Back button in left column -->
-			<div class="flex justify-end">
-				<a href="/" title="Go back" class="btn preset-filled-surface-500 py-2 px-4 rounded-xl">
-					<ArrowLeft />
-				</a>
-			</div>
-			
-			<!-- Start button in center column -->
-			<div class="flex justify-center">
-				<a 
-					href="/routines/{routine.id}/run" 
-					class="btn preset-filled-primary-500 text-xl py-6 px-12 rounded-2xl font-bold shadow-lg hover:scale-105 transition-transform"
-				>
-					<Play size={24} /> Start Routine
-				</a>
-			</div>
-			
-			<!-- Empty right column for balance -->
-			<div></div>
-		</div>
-
 	</div>
 {/if}
 
-<BottomToolbar />
+<BottomToolbar 
+	mode="view" 
+	onCancel={() => goto('/')}
+	onStart={() => goto(`/routines/${routineId}/run`)}
+/>

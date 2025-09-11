@@ -7,6 +7,7 @@
 	import { formatTime } from '$lib/Utilities.js';
 	import type { Routine, Step, EditableStep } from '$lib/types';
 	import StepsEditor from '$lib/components/StepsEditor.svelte';
+	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
 	import { Trash } from '@lucide/svelte';
 
 	const routineId = page.params.id;
@@ -222,7 +223,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="container mx-auto p-4 max-w-4xl">
+	<div class="container mx-auto p-4 max-w-4xl pb-24">
 		<!-- Header -->
 		<header class="mb-8">
 			<div class="flex items-center justify-between">
@@ -234,9 +235,7 @@
 						Update your routine to better fit your needs
 					</p>
 				</div>
-				<a href="/" class="btn preset-filled-surface-500 py-3 px-6 rounded-xl text-lg">
-					← Back to Dashboard
-				</a>
+
 			</div>
 		</header>
 
@@ -380,31 +379,16 @@
 							</div>
 						</div>
 					</div>
-					
-					<div class="mt-6 space-y-3">
-						<button
-							onclick={updateRoutine}
-							class="btn preset-filled-primary-500 btn-lg w-full"
-							disabled={saving}
-						>
-							{saving ? 'Saving...' : 'Update Routine'}
-						</button>
-						<a
-							href="/"
-							class="btn preset-outlined-primary-500 btn-lg w-full"
-						>
-							Cancel
-						</a>
-						<button
-							onclick={deleteRoutine}
-							class="btn preset-outlined-error-500 btn-lg w-full"
-							disabled={saving}
-						>
-							<Trash /> Delete Routine
-						</button>
-					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 {/if}
+
+<BottomToolbar 
+	mode="edit" 
+	{saving}
+	onSave={updateRoutine}
+	onCancel={() => goto(`/routines/${routineId}`)}
+	onDelete={deleteRoutine}
+/>

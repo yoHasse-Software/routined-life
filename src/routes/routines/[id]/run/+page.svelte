@@ -7,6 +7,7 @@
 	import { TimerStatus, SessionStatus } from '$lib/types';
 	import type { Routine, Step, Session, SessionStep, TimerState } from '$lib/types';
 	import { Check, Pause, Play, SkipForward, RotateCcw } from '@lucide/svelte';
+	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
 
 	const routineId = page.params.id;
 	
@@ -29,6 +30,10 @@
 	
 	onMount(async () => {
 		await loadRoutine();
+		// Automatically start the session since user clicked "Start" from view page
+		if (routine && steps.length > 0) {
+			await startSession();
+		}
 		loading = false;
 	});
 	
@@ -225,6 +230,10 @@
 	function getCurrentStep(): Step | null {
 		return steps[timerState.currentStepIndex] || null;
 	}
+	
+	function goBackToDashboard() {
+		goto('/');
+	}
 </script>
 
 <svelte:head>
@@ -248,58 +257,18 @@
 {:else}
 	<div class="min-h-screen bg-surface-900 text-surface-100">
 		{#if timerState.status === TimerStatus.IDLE}
-			<!-- Pre-start Screen -->
-			<div class="container mx-auto p-6 max-w-2xl">
-				<div class="text-center py-8">
-					<div class="mb-8">
-						<span class="text-4xl sm:text-6xl block mb-4">{routine.emoji}</span>
-						<h1 class="text-2xl sm:text-3xl font-bold mb-2 px-4">{routine.name}</h1>
-						{#if routine.notes}
-							<p class="text-surface-300 px-4">{routine.notes}</p>
-						{/if}
-					</div>
-					
-					<div class="card p-6 bg-surface-800 mb-8">
-						<h2 class="text-xl font-semibold mb-4">Routine Overview</h2>
-						<div class="space-y-3">
-							{#each steps as step, index}
-								<div class="flex items-center justify-between">
-									<div class="flex items-center space-x-3">
-										<span class="text-surface-400">{index + 1}.</span>
-										<span class="text-lg">{step.emoji}</span>
-										<span class="text-left flex-1">{step.name}</span>
-									</div>
-									<span class="text-surface-400 ml-2">{formatTime(step.durationSeconds)}</span>
-								</div>
-							{/each}
-						</div>
-						<div class="mt-4 pt-4 border-t border-surface-700">
-							<div class="flex justify-between font-semibold">
-								<span>Total Duration:</span>
-								<span>{formatTime(steps.reduce((total, step) => total + step.durationSeconds, 0))}</span>
-							</div>
-						</div>
-					</div>
-					
-					<div class="space-y-6">
-						<button
-							onclick={startSession}
-							class="btn preset-filled-primary-500 w-full text-xl py-6 px-8 rounded-xl font-semibold shadow-lg"
-						>
-							🚀 Start Routine
-						</button>
-						<a
-							href="/"
-							class="btn preset-filled-surface-500 w-full text-lg py-4 px-6 rounded-xl"
-						>
-							← Back to Dashboard
-						</a>
-					</div>
+			<!-- Starting Screen -->
+			<div class="min-h-screen flex items-center justify-center bg-surface-900">
+				<div class="text-center">
+					<span class="text-4xl sm:text-6xl block mb-4">{routine.emoji}</span>
+					<h1 class="text-2xl sm:text-3xl font-bold mb-4">{routine.name}</h1>
+					<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+					<p class="text-surface-300">Starting your routine...</p>
 				</div>
 			</div>
 		{:else if timerState.status === TimerStatus.COMPLETED}
 			<!-- Completion Screen -->
-			<div class="container mx-auto p-6 max-w-2xl">
+			<div class="container mx-auto p-6 max-w-2xl pb-24">
 				<div class="text-center py-8">
 					<div class="mb-8">
 						<span class="text-4xl sm:text-6xl block mb-4">🎉</span>
@@ -326,21 +295,6 @@
 								</p>
 							</div>
 						{/if}
-					</div>
-					
-					<div class="space-y-6">
-						<button
-							onclick={startSession}
-							class="btn preset-filled-primary-500 w-full text-xl py-6 px-8 rounded-xl font-semibold"
-						>
-							<RotateCcw /> Run Again
-						</button>
-						<a
-							href="/"
-							class="btn preset-filled-surface-500 w-full text-lg py-4 px-6 rounded-xl"
-						>
-							← Back to Dashboard
-						</a>
 					</div>
 				</div>
 			</div>
@@ -383,7 +337,7 @@
 					</header>
 					
 					<!-- Main Content -->
-					<main class="flex-1 flex items-center justify-center p-6">
+					<main class="flex-1 flex items-center justify-center p-6 pb-24">
 						<div class="text-center max-w-2xl w-full">
 							<!-- Current Step -->
 							<div class="mb-8">
@@ -419,50 +373,11 @@
 									</div>
 								</div>
 							{/if}
-							
-							<!-- Controls -->
-							<div class="flex items-center justify-center gap-4 px-4 max-w-md mx-auto">
-								<!-- Pause/Resume Button - Left Side -->
-								{#if timerState.status === TimerStatus.RUNNING}
-									<button
-										onclick={pauseTimer}
-										class="btn preset-outlined-secondary-500 text-3xl py-4 px-4 rounded-xl font-semibold min-h-[4rem] min-w-[4rem] shadow-lg flex items-center justify-center"
-										title="Pause"
-									>
-										<Pause />
-									</button>
-								{:else if timerState.status === TimerStatus.PAUSED}
-									<button
-										onclick={resumeTimer}
-										class="btn preset-filled-secondary-500 text-3xl py-4 px-4 rounded-xl font-semibold min-h-[4rem] min-w-[4rem] shadow-lg flex items-center justify-center"
-										title="Resume"
-									>
-										<Play />
-									</button>
-								{/if}
-								
-								<!-- Done Button - Center (Takes most space) -->
-								<button
-									onclick={completeStep}
-									class="btn preset-filled-primary-500 text-xl py-6 px-8 rounded-xl font-semibold min-h-[4rem] shadow-lg flex-1 max-w-xs"
-								>
-									<Check />
-								</button>
-								
-								<!-- Skip Button - Right Side -->
-								<button
-									onclick={skipStep}
-									class="btn preset-outlined-secondary-500 text-3xl py-4 px-4 rounded-xl font-semibold min-h-[4rem] min-w-[4rem] flex items-center justify-center"
-									title="Skip"
-								>
-									<SkipForward />
-								</button>
-							</div>
 						</div>
 					</main>
 					
 					<!-- Footer -->
-					<footer class="p-4 bg-surface-800">
+					<footer class="p-4 bg-surface-800 pb-26">
 						<div class="container mx-auto max-w-4xl text-center text-surface-400">
 							<p>Total time: {formatTime(getTotalElapsedTime())}</p>
 						</div>
@@ -471,4 +386,22 @@
 			{/if}
 		{/if}
 	</div>
+{/if}
+
+<!-- Show toolbar when running -->
+{#if timerState.status === TimerStatus.RUNNING || timerState.status === TimerStatus.PAUSED}
+	<BottomToolbar 
+		mode="run" 
+		isPaused={timerState.status === TimerStatus.PAUSED}
+		onPause={pauseTimer}
+		onResume={resumeTimer}
+		onComplete={completeStep}
+		onSkip={skipStep}
+	/>
+{:else if timerState.status === TimerStatus.COMPLETED}
+	<BottomToolbar 
+		mode="completed" 
+		onRunAgain={startSession}
+		onBackToDashboard={goBackToDashboard}
+	/>
 {/if}

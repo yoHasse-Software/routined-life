@@ -291,25 +291,14 @@
 						</div>
 					</div>
 				</div>
-				
-				<div class="mt-6 space-y-3">
-					<button
-						onclick={saveRoutine}
-						class="btn preset-filled-primary-500 btn-lg w-full"
-						disabled={saving}
-					>
-						{saving ? 'Saving...' : 'Save Routine'}
-					</button>
-					<a
-						href="/routines/new"
-						class="btn preset-outlined-primary-500 btn-lg w-full"
-					>
-						Cancel
-					</a>
-				</div>
 			</div>
 		</div>
 	</div>
 </div>
 
-<BottomToolbar />
+<BottomToolbar 
+	mode="create" 
+	{saving}
+	onSave={saveRoutine}
+	onCancel={() => goto('/routines/new')}
+/>

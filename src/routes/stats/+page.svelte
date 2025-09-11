@@ -105,9 +105,6 @@
 			<h1 class="text-4xl font-bold text-primary-600 dark:text-primary-400">
 				📊 Statistics
 			</h1>
-			<a href="/" class="btn preset-filled-surface-500 py-3 px-6 rounded-xl text-lg">
-				← Back to Dashboard
-			</a>
 		</div>
 	</header>
 

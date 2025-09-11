@@ -56,9 +56,6 @@
 					Choose how you'd like to create your routine
 				</p>
 			</div>
-			<a href="/" class="btn preset-filled-surface-500 py-3 px-6 rounded-xl text-lg">
-				← Back to Dashboard
-			</a>
 		</div>
 	</header>
 
