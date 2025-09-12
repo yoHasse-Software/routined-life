@@ -6,7 +6,7 @@
 	import { DAYS_OF_WEEK } from '$lib/types';
 	import type { Routine, Session, SessionStatus, Step } from '$lib/types';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
-    import { Clock, ChevronLeft, ChevronRight } from '@lucide/svelte';
+    import { Clock, ChevronLeft, ChevronRight, Calendar } from '@lucide/svelte';
 
 	
 	let routines = $state<Routine[]>([]);
@@ -16,7 +16,9 @@
 	
 	// Day selection state
 	let selectedDate = $state(new Date());
+	let currentDate = $state(new Date());
 	let currentWeekDates = $state<Date[]>([]);
+	let dayPopupOpen = $state(false);
 
 	let value = $state(['recent']);
 	
@@ -56,6 +58,15 @@
 	
 	function selectDate(date: Date) {
 		selectedDate = new Date(date);
+		dayPopupOpen = false; // Close popup after selection
+	}
+	
+	function toggleDayPopup() {
+		dayPopupOpen = !dayPopupOpen;
+	}
+	
+	function closeDayPopup() {
+		dayPopupOpen = false;
 	}
 	
 	function previousWeek() {
@@ -88,6 +99,16 @@
 			month: 'long', 
 			day: 'numeric' 
 		});
+	}
+	
+	function getShortDayName(date: Date): string {
+		const dayIndex = (date.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
+		return DAYS_OF_WEEK[dayIndex].full.slice(0, 3); // Get first 3 characters
+	}
+
+	function getDayName(date: Date): string {
+		const dayIndex = (date.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
+		return DAYS_OF_WEEK[dayIndex].full;
 	}
 	
 	async function loadData() {
@@ -146,6 +167,18 @@
 		}
 	}
 
+	function durationFromSession(session: Session): string {
+		if (!session.startTimestamp || !session.endTimestamp) return 'N/A';
+		const durationSeconds = Math.floor((session.endTimestamp.getTime() - session.startTimestamp.getTime()) / 1000);
+		if (durationSeconds < 60) {
+			return `${durationSeconds} sec`;
+		} else if (durationSeconds < 3600) {
+			return `${Math.ceil(durationSeconds / 60)} min`;
+		} else {
+			return `${(durationSeconds / 3600).toFixed(1)} hr`;
+		}
+	}
+
 </script>
 
 <svelte:head>
@@ -172,54 +205,21 @@
 			</div>
 		</div>
 	{:else}
-		<!-- Day Selector -->
-		<div class="mb-8 bg-surface-100 dark:bg-surface-800 rounded-lg p-6">
-			<div class="flex items-center justify-between mb-4">
-				<button 
-					on:click={previousWeek} 
-					class="btn btn-outline-secondary flex items-center space-x-2 p-2 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700"
-				>
-					<ChevronLeft size={20} />
-				</button>
-				<div class="text-center">
-					<h3 class="font-semibold text-surface-900 dark:text-surface-100">
-						Week of {formatDate(currentWeekDates[0])}
-					</h3>
-				</div>
-				<button 
-					on:click={nextWeek} 
-					class="btn btn-outline-secondary flex items-center space-x-2 p-2 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700"
-				>
-					<ChevronRight size={20} />
-				</button>
-			</div>
-			
-			<div class="grid grid-cols-7 gap-2">
-				{#each currentWeekDates as date, index}
-					{@const isSelected = isSameDate(date, selectedDate)}
-					{@const isToday = isSameDate(date, new Date())}
-					<button 
-						class="day-button p-3 rounded-lg text-center transition-all hover:scale-105"
-						class:bg-primary-500={isSelected}
-						class:text-white={isSelected}
-						class:bg-surface-200={!isSelected}
-						class:dark:bg-surface-700={!isSelected}
-						class:bg-warning-200={isToday && !isSelected}
-						class:dark:bg-warning-800={isToday && !isSelected}
-						class:text-warning-800={isToday && !isSelected}
-						class:dark:text-warning-200={isToday && !isSelected}
-						on:click={() => selectDate(date)}
-					>
-						<div class="font-medium text-sm">{DAYS_OF_WEEK[index].short}</div>
-						<div class="text-lg font-bold">{date.getDate()}</div>
-					</button>
-				{/each}
-			</div>
-		</div>
-
 		<div class="grid lg:grid-cols-2 gap-8">
 			<!-- Available Routines -->
 			<section>
+				<div class="flex justify-end items-center mb-4">
+
+					<button 
+						onclick={toggleDayPopup}
+						class="flex  items-center space-x-2 px-3 py-2 
+							{isToday(selectedDate) ? "bg-primary-500 hover:bg-primary-600" : "bg-tertiary-200 dark:bg-tertiary-700 hover:bg-tertiary-300 dark:hover:bg-tertiary-600"}
+							text-white rounded-lg transition-colors"
+					>
+						<span>{getDayName(selectedDate)}</span>
+						<Calendar size={16} />
+					</button>
+				</div>
 				{#if getFilteredRoutines().length > 0}
 					<div class="space-y-4">
 						{#each getFilteredRoutines() as routine (routine.id)}
@@ -266,48 +266,93 @@
 
 			<!-- Completed Today -->
 			<section>
-				<h2 class="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-4">
-					Completed on {formatDate(selectedDate)}
-				</h2>
-				{#if recentSessions.length > 0}
-					<div class="space-y-3">
-						{#each recentSessions as session (session.id)}
-							{@const routine = routines.find(r => r.id === session.routineId)}
-							{#if routine}
-								<div class="card p-3 bg-surface-100 dark:bg-surface-800">
-									<div class="flex items-center justify-between">
-										<div class="flex items-center space-x-2">
-											<span class="text-lg">{routine.emoji}</span>
-											<div>
-												<p class="font-medium text-surface-900 dark:text-surface-100">
-													{routine.name}
-												</p>
-												<p class="text-xs text-surface-600 dark:text-surface-300">
-													Completed at {session.startTimestamp.toLocaleTimeString()}
-												</p>
-												{#if session.actualDurationSeconds}
-													<p class="text-xs text-surface-500 dark:text-surface-400">
-														Duration: {formatDuration(session.actualDurationSeconds)}
-													</p>
-												{/if}
+				<Accordion {value} onValueChange={(e) => (value = e.value)} collapsible>
+					<Accordion.Item value="completed">
+						{#snippet lead()}<Clock />{/snippet}
+						{#snippet control()}Completed on {getDayName(selectedDate)}{/snippet}
+						{#snippet panel()}
+							{#if recentSessions.length > 0}
+								<div class="space-y-3">
+									{#each recentSessions as session (session.id)}
+										{@const routine = routines.find(r => r.id === session.routineId)}
+										{#if routine}
+											<div class="card p-3 bg-surface-100 dark:bg-surface-800">
+												<div class="flex items-center justify-between">
+													<div class="flex items-center space-x-2">
+														<span class="text-lg">{routine.emoji}</span>
+														<div>
+															<p class="font-medium text-surface-900 dark:text-surface-100">
+																{routine.name}
+															</p>
+															<p class="text-xs text-surface-600 dark:text-surface-300">
+																Completed at {session.startTimestamp.toLocaleTimeString()}
+															</p>
+															{#if session.endTimestamp}
+																<p class="text-xs text-surface-500 dark:text-surface-400">
+																	Duration: {durationFromSession(session)}
+																</p>
+															{/if}
+														</div>
+													</div>
+													<a href="/routines/{routine.id}" class="btn btn-secondary btn-sm">View</a>
+												</div>
 											</div>
-										</div>
-										<a href="/routines/{routine.id}" class="btn btn-secondary btn-sm">View</a>
-									</div>
+										{/if}
+									{/each}
+								</div>
+							{:else}
+								<div class="card p-6 text-center bg-surface-100 dark:bg-surface-800">
+									<p class="text-surface-600 dark:text-surface-300">
+										No routines completed on {formatDate(selectedDate)}
+									</p>
 								</div>
 							{/if}
-						{/each}
-					</div>
-				{:else}
-					<div class="card p-6 text-center bg-surface-100 dark:bg-surface-800">
-						<p class="text-surface-600 dark:text-surface-300">
-							No routines completed on {formatDate(selectedDate)}
-						</p>
-					</div>
-				{/if}
+						{/snippet}
+					</Accordion.Item>
+				</Accordion>
 			</section>
 		</div>
 	{/if}
 </div>
+
+<!-- Day Selection Popup -->
+{#if dayPopupOpen}
+	<!-- Backdrop -->
+	<div 
+		class="fixed inset-0 bg-black opacity-50 z-[60]" 
+		onclick={closeDayPopup}
+		onkeydown={(e) => e.key === 'Escape' && closeDayPopup()}
+		role="button"
+		tabindex="0"
+	></div>
+	
+	<!-- Popup Bar -->
+	<div class="fixed bottom-0 left-0 right-0 bg-surface-100 dark:bg-surface-800 border-t border-surface-300 dark:border-surface-600 z-[70] p-4 sm:p-6">
+		<div class="w-full sm:container sm:mx-auto sm:max-w-6xl">
+			<h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4 text-center">
+				Select Day
+			</h3>
+			<div class="grid grid-cols-7 gap-1 sm:gap-2">
+				{#each currentWeekDates as date, index}
+					{@const isSelected = isSameDate(date, selectedDate)}
+					{@const isToday = isSameDate(date, new Date())}
+					<button 
+						class="day-button p-3 sm:p-4 rounded-lg text-center transition-all hover:scale-105 min-h-[60px] sm:min-h-auto"
+						class:bg-primary-500={isSelected}
+						class:text-white={isSelected}
+						class:bg-surface-200={!isSelected}
+						class:dark:bg-surface-700={!isSelected}
+						class:bg-tertiary-200={isToday && !isSelected}
+						class:dark:bg-tertiary-800={isToday && !isSelected}
+						onclick={() => selectDate(date)}
+					>
+						<div class="font-medium text-xs sm:text-sm">{DAYS_OF_WEEK[index].full.slice(0, 3)}</div>
+						<div class="text-base sm:text-lg font-bold">{date.getDate()}</div>
+					</button>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/if}
 
 <BottomToolbar />
