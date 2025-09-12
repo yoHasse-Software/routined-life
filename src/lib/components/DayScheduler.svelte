@@ -53,7 +53,11 @@
 
     $effect(() => {
         // Ensure selectedDays only contains days that are in availableDays
-        selectedDays = DAYS_OF_WEEK.filter(day => availableDays.includes(day.index)).map(d => d.index);
+        availableDays;
+        setTimeout(() => {
+            // console.log('Available Days changed, updated selectedDays:', selectedDays);
+            selectedDays = selectedDays.filter(d => availableDays.includes(d));
+        }, 0);
     });
 	
 	// Check if presets are available with current context

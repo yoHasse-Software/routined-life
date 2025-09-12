@@ -346,7 +346,9 @@
 						{#if session}
 							<div class="mt-4 pt-4 border-t border-surface-700">
 								<p class="text-surface-300">
-									Total time: {formatTime(getTotalElapsedTime())}
+									Total time: {session.endTimestamp && session.startTimestamp 
+										? formatTime(Math.floor((session.endTimestamp.getTime() - session.startTimestamp.getTime()) / 1000))
+										: formatTime(getTotalElapsedTime())}
 								</p>
 							</div>
 						{/if}

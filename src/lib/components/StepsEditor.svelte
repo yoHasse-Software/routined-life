@@ -6,6 +6,7 @@
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
 	import DayScheduler from './DayScheduler.svelte';
 	import { onMount } from 'svelte';
+    import { on } from 'svelte/events';
 	
 	interface Props {
 		steps: EditableStep[];
@@ -47,6 +48,7 @@
 				}
 			});
 		}, 100);
+
 	});
 	
 	// Update carousel positions when steps change
@@ -153,6 +155,8 @@
 		
 		container.scrollLeft = Math.max(0, scrollPosition);
 	}
+
+
 </script>
 
 <style>

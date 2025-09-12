@@ -50,7 +50,7 @@
 		routine.emoji = originalRoutine.emoji;
 		routine.color = originalRoutine.color;
 		routine.notes = originalRoutine.notes || '';
-		routine.availableDays = originalRoutine.availableDays || [...ALL_DAYS];
+		routine.availableDays = originalRoutine.availableDays ? [...originalRoutine.availableDays] : [...ALL_DAYS];
 		
 		// Load steps
 		originalSteps = await dataStore.getStepsForRoutine(routineId);
@@ -61,7 +61,7 @@
 			durationMinutes: Math.floor(step.durationSeconds / 60),
 			checklist: [...step.checklist],
 			tempChecklistItem: '',
-			availableDays: step.availableDays || [...ALL_DAYS], // Default to all days
+			availableDays: step.availableDays ? [...step.availableDays] : [...ALL_DAYS], // Preserve empty arrays
 			order: step.order
 		}));
 		
