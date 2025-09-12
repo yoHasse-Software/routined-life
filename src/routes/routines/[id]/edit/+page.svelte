@@ -250,7 +250,7 @@
 			<!-- Main Form -->
 			<div class="lg:col-span-2 space-y-6">
 				<!-- Routine Details -->
-				<section class="card p-6 bg-surface-100 dark:bg-surface-800">
+				<section class="p-6 bg-surface-100 dark:bg-surface-800">
 					<h2 class="text-xl font-semibold mb-4 text-surface-900 dark:text-surface-100">
 						Routine Details
 					</h2>

@@ -5,6 +5,7 @@
     import { ChevronDown, ChevronUp, Plus, SquareCheck, Trash } from '@lucide/svelte';
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
 	import DayScheduler from './DayScheduler.svelte';
+	import { onMount } from 'svelte';
 	
 	interface Props {
 		steps: EditableStep[];
@@ -27,56 +28,95 @@
 	}: Props = $props();
 
     let checklistValue = $state(['none']);
+	
+	// References to carousel elements for each step
+	let carouselRefs: (HTMLElement | undefined)[] = $state([]);
 
     function checkListChanged(e: any) {
         checklistValue = e.value;
     }
 	
-	// Handle mouse wheel scrolling for horizontal containers
-	function handleWheel(event: WheelEvent) {
-		const container = event.currentTarget as HTMLElement;
-		
-		// Prevent default vertical scroll
-		event.preventDefault();
-		
-		// Convert vertical wheel movement to horizontal scroll
-		const scrollAmount = event.deltaY || event.deltaX;
-		container.scrollLeft += scrollAmount;
-	}
+	// Initialize carousel positions when component mounts or steps change
+	onMount(() => {
+		// Small delay to ensure DOM is fully rendered
+		setTimeout(() => {
+			steps.forEach((step, index) => {
+				const carousel = carouselRefs[index];
+				if (carousel && step.durationMinutes) {
+					scrollToSelectedMinute(carousel, step.durationMinutes);
+				}
+			});
+		}, 100);
+	});
+	
+	// Update carousel positions when steps change
+	$effect(() => {
+		steps.forEach((step, index) => {
+			const carousel = carouselRefs[index];
+			if (carousel && step.durationMinutes) {
+				// Use requestAnimationFrame to ensure DOM updates are complete
+				requestAnimationFrame(() => {
+					scrollToSelectedMinute(carousel, step.durationMinutes);
+				});
+			}
+		});
+	});
+	
 	
 	// Handle mouse drag scrolling
 	let isDragging = $state(false);
 	let startX = $state(0);
 	let scrollLeft = $state(0);
+	let currentContainer: HTMLElement | null = $state(null);
+	let currentStepIndex = $state(0);
 	
-	function handleMouseDown(event: MouseEvent) {
+	function handleMouseDown(event: MouseEvent, stepIndex: number) {
 		const container = event.currentTarget as HTMLElement;
 		isDragging = true;
 		startX = event.pageX - container.offsetLeft;
 		scrollLeft = container.scrollLeft;
+		currentContainer = container;
+		currentStepIndex = stepIndex;
 		container.style.cursor = 'grabbing';
+		
+		// Add global event listeners
+		document.addEventListener('mousemove', handleGlobalMouseMove);
+		document.addEventListener('mouseup', handleGlobalMouseUp);
+		
+		event.preventDefault();
 	}
 	
-	function handleMouseMove(event: MouseEvent) {
-		if (!isDragging) return;
+	function handleGlobalMouseMove(event: MouseEvent) {
+		if (!isDragging || !currentContainer) return;
 		event.preventDefault();
 		
-		const container = event.currentTarget as HTMLElement;
-		const x = event.pageX - container.offsetLeft;
+		const x = event.pageX - currentContainer.offsetLeft;
 		const walk = (x - startX) * 2; // Scroll speed multiplier
-		container.scrollLeft = scrollLeft - walk;
+		currentContainer.scrollLeft = scrollLeft - walk;
 	}
 	
-	function handleMouseUp(event: MouseEvent) {
-		const container = event.currentTarget as HTMLElement;
+	function handleGlobalMouseUp(event: MouseEvent) {
+		if (!isDragging || !currentContainer) return;
+		
 		isDragging = false;
-		container.style.cursor = 'grab';
+		currentContainer.style.cursor = 'grab';
+		
+		// Update selection immediately after drag ends
+		updateSelectedMinute(currentContainer, currentStepIndex);
+		
+		// Remove global event listeners
+		document.removeEventListener('mousemove', handleGlobalMouseMove);
+		document.removeEventListener('mouseup', handleGlobalMouseUp);
+		
+		currentContainer = null;
 	}
 	
 	function handleMouseLeave(event: MouseEvent) {
+		// Don't stop dragging on mouse leave - let global handlers take over
 		const container = event.currentTarget as HTMLElement;
-		isDragging = false;
-		container.style.cursor = 'grab';
+		if (!isDragging) {
+			container.style.cursor = 'grab';
+		}
 	}
 	
 	// Calculate which minute is currently centered and auto-select it
@@ -90,44 +130,28 @@
 		const paddingWidth = 152; // Padding on left to center first item
 		
 		// Calculate which button is in the center
+		// The buttons represent minutes 1, 2, 3, ... 60 (we skip 0)
+		// So buttonIndex 0 = minute 1, buttonIndex 1 = minute 2, etc.
 		const buttonIndex = Math.round((centerPosition - paddingWidth) / buttonWidth);
-		const selectedMinute = Math.max(0, Math.min(60, buttonIndex));
+		const selectedMinute = Math.max(1, Math.min(60, buttonIndex));
 		
-		// Update the step's duration if it's different
-		if (steps[stepIndex].durationMinutes !== selectedMinute) {
-			steps[stepIndex].durationMinutes = selectedMinute;
-		}
+		// Force update the step's duration
+		steps[stepIndex].durationMinutes = selectedMinute;
 	}
 	
-	// Handle scroll events to auto-select centered value
-	function handleScroll(event: Event, stepIndex: number) {
-		const container = event.currentTarget as HTMLElement;
-		updateSelectedMinute(container, stepIndex);
-	}
-	
-	// Handle wheel with auto-selection
-	function handleWheelWithSelection(event: WheelEvent, stepIndex: number) {
-		const container = event.currentTarget as HTMLElement;
+	// Scroll carousel to show the currently selected minute
+	function scrollToSelectedMinute(container: HTMLElement, minute: number) {
+		const buttonWidth = 48; // w-12 = 3rem = 48px
+		const paddingWidth = 152; // Padding on left to center first item
+		const containerWidth = container.offsetWidth;
 		
-		// Prevent default vertical scroll
-		event.preventDefault();
+		// Calculate the position where this minute should be centered
+		// minute 1 is at buttonIndex 0, minute 2 is at buttonIndex 1, etc.
+		const buttonIndex = minute - 1;
+		const buttonCenter = paddingWidth + (buttonIndex * buttonWidth) + (buttonWidth / 2);
+		const scrollPosition = buttonCenter - (containerWidth / 2);
 		
-		// Convert vertical wheel movement to horizontal scroll
-		const scrollAmount = event.deltaY || event.deltaX;
-		container.scrollLeft += scrollAmount;
-		
-		// Update selection after a short delay to let scroll settle
-		setTimeout(() => updateSelectedMinute(container, stepIndex), 50);
-	}
-	
-	// Handle mouse up with auto-selection
-	function handleMouseUpWithSelection(event: MouseEvent, stepIndex: number) {
-		const container = event.currentTarget as HTMLElement;
-		isDragging = false;
-		container.style.cursor = 'grab';
-		
-		// Update selection after drag ends
-		setTimeout(() => updateSelectedMinute(container, stepIndex), 50);
+		container.scrollLeft = Math.max(0, scrollPosition);
 	}
 </script>
 
@@ -142,7 +166,7 @@
 </style>
 
 <!-- Steps -->
-<section class="card p-6 bg-surface-100 dark:bg-surface-800">
+<section class="p-6 bg-surface-100 dark:bg-surface-800">
 	<div class="flex items-center justify-between mb-4">
 		<h2 class="text-xl font-semibold text-surface-900 dark:text-surface-100">
 			Steps ({steps.length})
@@ -222,18 +246,17 @@
 								
 								<!-- Horizontal scrollable wheel -->
 								<div 
+									bind:this={carouselRefs[index]}
 									class="h-full overflow-x-auto scrollbar-hide flex items-center"
 									style="scroll-snap-type: x mandatory; touch-action: pan-x; cursor: grab; user-select: none; scroll-behavior: smooth;"
 									role="slider"
 									tabindex="0"
 									aria-label="Select duration in minutes"
 									aria-valuenow={step.durationMinutes}
-									aria-valuemin="0"
+									aria-valuemin="1"
 									aria-valuemax="60"
 
-									onmousedown={handleMouseDown}
-									onmousemove={handleMouseMove}
-									onmouseup={(e) => handleMouseUpWithSelection(e, index)}
+									onmousedown={(e) => handleMouseDown(e, index)}
 									onmouseleave={handleMouseLeave}
 								>
 									<!-- Padding left to center first item -->
