@@ -1,11 +1,12 @@
-import type { Routine, Step, Session, SessionStep } from './types.js';
+import type { Routine, Step, Session, SessionStep, AppSettings } from './types.js';
 
 class DataStore {
     private readonly STORAGE_KEYS = {
         ROUTINES: 'routined-life-routines',
         STEPS: 'routined-life-steps',
         SESSIONS: 'routined-life-sessions',
-        SESSION_STEPS: 'routined-life-session-steps'
+        SESSION_STEPS: 'routined-life-session-steps',
+        SETTINGS: 'routined-life-settings'
     };
 
     // Utility methods for localStorage
@@ -168,6 +169,27 @@ class DataStore {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
+    // Settings operations
+    getSettings(): AppSettings | null {
+        if (typeof window === 'undefined') return null;
+        try {
+            const data = localStorage.getItem(this.STORAGE_KEYS.SETTINGS);
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+            return null;
+        }
+    }
+
+    saveSettings(settings: AppSettings): void {
+        if (typeof window === 'undefined') return;
+        try {
+            localStorage.setItem(this.STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+        } catch (error) {
+            console.error('Failed to save settings:', error);
+        }
+    }
+
     // Clear all data (for development/testing)
     async clearAllData(): Promise<void> {
         if (typeof window === 'undefined') return;
@@ -177,4 +199,4 @@ class DataStore {
     }
 }
 
-export const dataStore = new DataStore();
+export const DataStoreService = new DataStore();

@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { dataStore } from '$lib/DataStoreService';
+	import { DataStoreService } from '$lib/DataStoreService';
 	import { ROUTINE_COLORS, ALL_DAYS } from '$lib/types';
 	import { formatTime } from '$lib/Utilities.js';
 	import type { Routine, Step, EditableStep } from '$lib/types';
@@ -40,7 +40,7 @@
 			return;
 		}
 		
-		originalRoutine = await dataStore.getRoutine(routineId);
+		originalRoutine = await DataStoreService.getRoutine(routineId);
 		if (!originalRoutine) {
 			goto('/');
 			return;
@@ -55,7 +55,7 @@
 		routine.canRepeat = originalRoutine.canRepeat || false;
 		
 		// Load steps
-		originalSteps = await dataStore.getStepsForRoutine(routineId);
+		originalSteps = await DataStoreService.getStepsForRoutine(routineId);
 		steps = originalSteps.map(step => ({
 			id: step.id,
 			name: step.name,
@@ -149,13 +149,13 @@
 				updatedAt: new Date()
 			};
 			
-			await dataStore.saveRoutine(updatedRoutine);
+			await DataStoreService.saveRoutine(updatedRoutine);
 			
 			// Delete removed steps
 			for (const originalStep of originalSteps) {
 				const stillExists = steps.find(s => s.id === originalStep.id);
 				if (!stillExists) {
-					await dataStore.deleteStep(originalStep.id);
+					await DataStoreService.deleteStep(originalStep.id);
 				}
 			}
 			
@@ -163,7 +163,7 @@
 			for (let i = 0; i < steps.length; i++) {
 				const step = steps[i];
 				const stepData: Step = {
-					id: step.id || dataStore.generateId(),
+					id: step.id || DataStoreService.generateId(),
 					routineId: routineId!,
 					name: step.name.trim(),
 					description: step.description.trim(),
@@ -173,7 +173,7 @@
 					order: i
 				};
 				
-				await dataStore.saveStep(stepData);
+				await DataStoreService.saveStep(stepData);
 			}
 			
 			goto('/');
@@ -192,7 +192,7 @@
 			saving = true;
 			
 			try {
-				await dataStore.deleteRoutine(originalRoutine.id);
+				await DataStoreService.deleteRoutine(originalRoutine.id);
 				goto('/');
 			} catch (error) {
 				console.error('Failed to delete routine:', error);

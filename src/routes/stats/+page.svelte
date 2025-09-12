@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { dataStore } from '$lib/DataStoreService';
+	import { DataStoreService } from '$lib/DataStoreService';
 	import { formatDuration, formatDate, getWeekStart } from '$lib/Utilities';
 	import type { Routine, Session, SessionStatus } from '$lib/types';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
@@ -15,8 +15,8 @@
 	});
 
 	async function loadData() {
-		routines = await dataStore.getRoutines();
-		sessions = await dataStore.getSessions();
+		routines = await DataStoreService.getRoutines();
+		sessions = await DataStoreService.getSessions();
 	}
 
 	function getWeeklyStats() {

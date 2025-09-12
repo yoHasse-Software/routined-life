@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { dataStore } from '$lib/DataStoreService.js';
+	import { DataStoreService } from '$lib/DataStoreService.js';
 	import { ROUTINE_TEMPLATES } from '$lib/RoutineTemplates';
 	import { ALL_DAYS } from '$lib/types';
 	import type { Routine } from '$lib/types';
@@ -8,7 +8,7 @@
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
 
 	async function createFromTemplate(template: any) {
-		const routineId = dataStore.generateId();
+		const routineId = DataStoreService.generateId();
 		const routine: Routine = {
 			id: routineId,
 			name: template.name,
@@ -20,13 +20,13 @@
 			updatedAt: new Date()
 		};
 		
-		await dataStore.saveRoutine(routine);
+		await DataStoreService.saveRoutine(routine);
 		
 		// Create steps
 		for (let i = 0; i < template.steps.length; i++) {
 			const step = template.steps[i];
-			await dataStore.saveStep({
-				id: dataStore.generateId(),
+			await DataStoreService.saveStep({
+				id: DataStoreService.generateId(),
 				routineId,
 				name: `${step.emoji} ${step.name}`,
 				description: step.description,

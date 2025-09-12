@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { dataStore } from '$lib/DataStoreService';
+	import { DataStoreService } from '$lib/DataStoreService';
 	import { formatTime } from '$lib/Utilities.js';
 	import type { Routine, Step } from '$lib/types';
 	import { ArrowLeft, Play, SquarePen } from '@lucide/svelte';
@@ -25,9 +25,9 @@
 	async function loadRoutine() {
 		if (!routineId) return;
 		
-		routine = await dataStore.getRoutine(routineId);
+		routine = await DataStoreService.getRoutine(routineId);
 		if (routine) {
-			steps = await dataStore.getStepsForRoutine(routineId);
+			steps = await DataStoreService.getStepsForRoutine(routineId);
 		}
 	}
 	

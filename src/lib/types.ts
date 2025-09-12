@@ -1,5 +1,12 @@
 // Core data types for the RoutineFlow app
 
+export interface AppSettings {
+    autoEmoji: boolean;
+    darkMode: boolean;
+    weekStartsOnMonday: boolean;
+    timeFormat24h: boolean;
+}
+
 export interface Routine {
     id: string;
     name: string;

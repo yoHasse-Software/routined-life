@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount, onDestroy } from 'svelte';
-	import { dataStore } from '$lib/DataStoreService';
+	import { DataStoreService } from '$lib/DataStoreService';
 	import { formatTime } from '$lib/Utilities';
 	import { TimerStatus, SessionStatus } from '$lib/types';
 	import type { Routine, Step, Session, SessionStep, TimerState } from '$lib/types';
@@ -59,13 +59,13 @@
 			return;
 		}
 		
-		routine = await dataStore.getRoutine(routineId);
+		routine = await DataStoreService.getRoutine(routineId);
 		if (!routine) {
 			goto('/');
 			return;
 		}
 		
-		steps = await dataStore.getStepsForRoutine(routineId);
+		steps = await DataStoreService.getStepsForRoutine(routineId);
 		if (steps.length > 0) {
 			timerState.remainingSeconds = steps[0].durationSeconds;
 		}
@@ -76,21 +76,21 @@
 		
 		// Create session
 		session = {
-			id: dataStore.generateId(),
+			id: DataStoreService.generateId(),
 			routineId: routine.id,
 			startTimestamp: new Date(),
 			status: SessionStatus.RUNNING,
 			createdAt: new Date()
 		};
 		
-		await dataStore.saveSession(session);
+		await DataStoreService.saveSession(session);
 		
 		// Create session steps
 		sessionSteps = [];
 		for (const step of steps) {
 			const isPreCompleted = preCompletedStepIds.has(step.id);
 			const sessionStep: SessionStep = {
-				id: dataStore.generateId(),
+				id: DataStoreService.generateId(),
 				sessionId: session.id,
 				stepId: step.id,
 				plannedDurationSeconds: step.durationSeconds,
@@ -100,7 +100,7 @@
 				actualDurationSeconds: isPreCompleted ? 0 : undefined
 			};
 			sessionSteps.push(sessionStep);
-			await dataStore.saveSessionStep(sessionStep);
+			await DataStoreService.saveSessionStep(sessionStep);
 		}
 		
 		// Start with the first non-completed step
@@ -177,7 +177,7 @@
 		if (sessionStep) {
 			sessionStep.actualDurationSeconds = actualDuration;
 			sessionStep.completedAt = endTime;
-			await dataStore.saveSessionStep(sessionStep);
+			await DataStoreService.saveSessionStep(sessionStep);
 		}
 		
 		// Move to next incomplete step or complete routine
@@ -204,7 +204,7 @@
 				const actualDuration = Math.floor((new Date().getTime() - stepStartTime.getTime()) / 1000);
 				sessionStep.actualDurationSeconds = actualDuration;
 			}
-			await dataStore.saveSessionStep(sessionStep);
+			await DataStoreService.saveSessionStep(sessionStep);
 		}
 		
 		// Move to next incomplete step or complete routine
@@ -240,7 +240,7 @@
 			session.status = SessionStatus.PARTIAL;
 		}
 		
-		await dataStore.saveSession(session);
+		await DataStoreService.saveSession(session);
 	}
 	
 	async function abandonSession() {
@@ -253,7 +253,7 @@
 		
 		session.endTimestamp = new Date();
 		session.status = SessionStatus.ABANDONED;
-		await dataStore.saveSession(session);
+		await DataStoreService.saveSession(session);
 		
 		goto('/');
 	}
