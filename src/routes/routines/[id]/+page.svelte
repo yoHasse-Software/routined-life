@@ -43,6 +43,14 @@
 		}
 		completedSteps = completedSteps;
 	}
+	function startRoutineWithCompletedSteps() {
+		// Convert completed steps set to comma-separated string for URL
+		const completedStepsParam = Array.from(completedSteps).join(',');
+		const url = completedStepsParam 
+			? `/routines/${routineId}/run?completed=${encodeURIComponent(completedStepsParam)}`
+			: `/routines/${routineId}/run`;
+		goto(url);
+	}
 </script>
 
 <svelte:head>
@@ -150,5 +158,5 @@
 <BottomToolbar 
 	mode="view" 
 	onCancel={() => goto('/')}
-	onStart={() => goto(`/routines/${routineId}/run`)}
+	onStart={startRoutineWithCompletedSteps}
 />

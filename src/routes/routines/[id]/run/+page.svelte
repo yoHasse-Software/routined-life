@@ -11,6 +11,16 @@
 
 	const routineId = page.params.id;
 	
+	// Get pre-completed steps from URL parameters
+	let preCompletedStepIds = $state<Set<string>>(new Set());
+	
+	$effect(() => {
+		const completedParam = page.url.searchParams.get('completed');
+		if (completedParam) {
+			preCompletedStepIds = new Set(completedParam.split(',').filter(id => id.trim()));
+		}
+	});
+	
 	let routine = $state<Routine | null>(null);
 	let steps = $state<Step[]>([]);
 	let session = $state<Session | null>(null);
@@ -78,18 +88,40 @@
 		// Create session steps
 		sessionSteps = [];
 		for (const step of steps) {
+			const isPreCompleted = preCompletedStepIds.has(step.id);
 			const sessionStep: SessionStep = {
 				id: dataStore.generateId(),
 				sessionId: session.id,
 				stepId: step.id,
 				plannedDurationSeconds: step.durationSeconds,
-				skipped: false
+				skipped: false,
+				// Mark pre-completed steps as completed
+				completedAt: isPreCompleted ? new Date() : undefined,
+				actualDurationSeconds: isPreCompleted ? 0 : undefined
 			};
 			sessionSteps.push(sessionStep);
 			await dataStore.saveSessionStep(sessionStep);
 		}
 		
+		// Start with the first non-completed step
+		findNextIncompleteStep();
 		startStep();
+	}
+	
+	// Find the next incomplete step and set currentStepIndex
+	function findNextIncompleteStep() {
+		while (timerState.currentStepIndex < steps.length) {
+			const currentStep = steps[timerState.currentStepIndex];
+			const sessionStep = sessionSteps.find(ss => ss.stepId === currentStep.id);
+			
+			// If this step is not completed, we found our next step
+			if (!sessionStep?.completedAt) {
+				return;
+			}
+			
+			// This step is completed, move to next
+			timerState.currentStepIndex++;
+		}
 	}
 	
 	function startStep() {
@@ -140,14 +172,19 @@
 		const actualDuration = Math.floor((endTime.getTime() - stepStartTime.getTime()) / 1000);
 		
 		// Update session step
-		const sessionStep = sessionSteps[timerState.currentStepIndex];
-		sessionStep.actualDurationSeconds = actualDuration;
-		sessionStep.completedAt = endTime;
-		await dataStore.saveSessionStep(sessionStep);
+		const currentStep = steps[timerState.currentStepIndex];
+		const sessionStep = sessionSteps.find(ss => ss.stepId === currentStep.id);
+		if (sessionStep) {
+			sessionStep.actualDurationSeconds = actualDuration;
+			sessionStep.completedAt = endTime;
+			await dataStore.saveSessionStep(sessionStep);
+		}
 		
-		// Move to next step or complete routine
-		if (timerState.currentStepIndex < steps.length - 1) {
-			timerState.currentStepIndex++;
+		// Move to next incomplete step or complete routine
+		timerState.currentStepIndex++;
+		findNextIncompleteStep();
+		
+		if (timerState.currentStepIndex < steps.length) {
 			startStep();
 		} else {
 			await completeSession();
@@ -158,18 +195,23 @@
 		if (!session) return;
 		
 		// Mark current step as skipped
-		const sessionStep = sessionSteps[timerState.currentStepIndex];
-		sessionStep.skipped = true;
-		sessionStep.completedAt = new Date();
-		if (stepStartTime) {
-			const actualDuration = Math.floor((new Date().getTime() - stepStartTime.getTime()) / 1000);
-			sessionStep.actualDurationSeconds = actualDuration;
+		const currentStep = steps[timerState.currentStepIndex];
+		const sessionStep = sessionSteps.find(ss => ss.stepId === currentStep.id);
+		if (sessionStep) {
+			sessionStep.skipped = true;
+			sessionStep.completedAt = new Date();
+			if (stepStartTime) {
+				const actualDuration = Math.floor((new Date().getTime() - stepStartTime.getTime()) / 1000);
+				sessionStep.actualDurationSeconds = actualDuration;
+			}
+			await dataStore.saveSessionStep(sessionStep);
 		}
-		await dataStore.saveSessionStep(sessionStep);
 		
-		// Move to next step or complete routine
-		if (timerState.currentStepIndex < steps.length - 1) {
-			timerState.currentStepIndex++;
+		// Move to next incomplete step or complete routine
+		timerState.currentStepIndex++;
+		findNextIncompleteStep();
+		
+		if (timerState.currentStepIndex < steps.length) {
 			startStep();
 		} else {
 			await completeSession();
@@ -188,9 +230,13 @@
 		session.endTimestamp = new Date();
 		session.status = SessionStatus.COMPLETED;
 		
-		// Check if any steps were skipped to determine if partial
-		const skippedSteps = sessionSteps.filter(ss => ss.skipped);
-		if (skippedSteps.length > 0 && skippedSteps.length < sessionSteps.length) {
+		// Check if any steps were actually skipped during the session (not pre-completed)
+		// A step is considered skipped only if it has skipped=true AND was not pre-completed
+		const actuallySkippedSteps = sessionSteps.filter(ss => 
+			ss.skipped && !preCompletedStepIds.has(ss.stepId)
+		);
+		
+		if (actuallySkippedSteps.length > 0 && actuallySkippedSteps.length < sessionSteps.length) {
 			session.status = SessionStatus.PARTIAL;
 		}
 		
@@ -214,11 +260,20 @@
 	
 	function getProgress(): number {
 		if (steps.length === 0) return 0;
-		const completedSteps = timerState.currentStepIndex;
-		const currentStepProgress = timerState.status === TimerStatus.COMPLETED ? 1 : 
-			(steps[timerState.currentStepIndex]?.durationSeconds - timerState.remainingSeconds) / 
-			(steps[timerState.currentStepIndex]?.durationSeconds || 1);
-		return ((completedSteps + currentStepProgress) / steps.length) * 100;
+		
+		// Count all completed steps (including pre-completed ones)
+		const completedStepsCount = sessionSteps.filter(ss => ss.completedAt).length;
+		
+		// Calculate progress for current step if it's running
+		let currentStepProgress = 0;
+		if (timerState.status === TimerStatus.RUNNING || timerState.status === TimerStatus.PAUSED) {
+			const currentStep = steps[timerState.currentStepIndex];
+			if (currentStep) {
+				currentStepProgress = (currentStep.durationSeconds - timerState.remainingSeconds) / currentStep.durationSeconds;
+			}
+		}
+		
+		return ((completedStepsCount + currentStepProgress) / steps.length) * 100;
 	}
 	
 	function getTotalElapsedTime(): number {
@@ -280,11 +335,11 @@
 						<h2 class="text-xl font-semibold mb-4">Session Summary</h2>
 						<div class="grid grid-cols-2 gap-4 text-center">
 							<div>
-								<p class="text-2xl font-bold text-success-400">{sessionSteps.filter(ss => !ss.skipped).length}</p>
+								<p class="text-2xl font-bold text-success-400">{sessionSteps.filter(ss => ss.completedAt && !ss.skipped).length}</p>
 								<p class="text-surface-400">Steps Completed</p>
 							</div>
 							<div>
-								<p class="text-2xl font-bold text-warning-400">{sessionSteps.filter(ss => ss.skipped).length}</p>
+								<p class="text-2xl font-bold text-warning-400">{sessionSteps.filter(ss => ss.skipped && !preCompletedStepIds.has(ss.stepId)).length}</p>
 								<p class="text-surface-400">Steps Skipped</p>
 							</div>
 						</div>
@@ -359,16 +414,16 @@
 							</div>
 							
 							<!-- Checklist -->
-							{#if currentStep.checklist.length > 0}
+							{#if false } <!-- Temporarily disable checklist display, currentStep.checklist.length > 0 -->
 								<div class="card p-4 bg-surface-800 mb-8">
 									<h3 class="font-semibold mb-3">Checklist:</h3>
 									<div class="space-y-2 text-left">
-										{#each currentStep.checklist as item}
+										<!-- {#each currentStep.checklist as item}
 											<div class="flex items-center space-x-2">
 												<span class="text-surface-400">•</span>
 												<span>{item}</span>
 											</div>
-										{/each}
+										{/each} -->
 									</div>
 								</div>
 							{/if}
