@@ -18,7 +18,8 @@
 		emoji: '⭐',
 		color: ROUTINE_COLORS[0] as string,
 		notes: '',
-		availableDays: [...ALL_DAYS] // Default to all days
+		availableDays: [...ALL_DAYS], // Default to all days
+		canRepeat: false // Default to off
 	});
 
 	let steps = $state<EditableStep[]>([]);
@@ -51,6 +52,7 @@
 		routine.color = originalRoutine.color;
 		routine.notes = originalRoutine.notes || '';
 		routine.availableDays = originalRoutine.availableDays ? [...originalRoutine.availableDays] : [...ALL_DAYS];
+		routine.canRepeat = originalRoutine.canRepeat || false;
 		
 		// Load steps
 		originalSteps = await dataStore.getStepsForRoutine(routineId);
@@ -143,6 +145,7 @@
 				color: routine.color,
 				notes: routine.notes.trim(),
 				availableDays: routine.availableDays,
+				canRepeat: routine.canRepeat,
 				updatedAt: new Date()
 			};
 			
@@ -311,6 +314,25 @@
 								label="When should this routine be available?"
 								showPresets={true}
 							/>
+						</div>
+						
+						<!-- Can Repeat Option -->
+						<div>
+							<label class="flex items-center space-x-3 cursor-pointer">
+								<input
+									type="checkbox"
+									bind:checked={routine.canRepeat}
+									class="checkbox"
+								/>
+								<div>
+									<span class="text-sm font-medium text-surface-700 dark:text-surface-300">
+										Allow multiple completions per day
+									</span>
+									<p class="text-xs text-surface-600 dark:text-surface-400">
+										Enable this if the routine can be done more than once per day
+									</p>
+								</div>
+							</label>
 						</div>
 						
                         {#if false} <!-- Notes are currently not editable -->

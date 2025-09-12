@@ -7,6 +7,7 @@ export interface Routine {
     color: string;
     notes?: string;
     availableDays?: number[]; // Array of day indices (0=Sunday, 1=Monday, etc.)
+    canRepeat?: boolean; // Whether routine can be run multiple times per day, default false
     createdAt: Date;
     updatedAt: Date;
 }
