@@ -82,7 +82,7 @@
 						🎭 Automatically add emoji based on name
 					</h3>
 					<p class="text-surface-600 dark:text-surface-300 text-sm">
-						When enabled, emojis will be automatically suggested based on routine names
+						When enabled, emojis will be automatically added to routine and step names based on their content
 					</p>
 				</div>
 				<label class="toggle-switch">

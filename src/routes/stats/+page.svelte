@@ -282,17 +282,17 @@
 			</section>
 		</div>
 
-		{#if sessions.length === 0}
+		{#if sessions.length === 0 && routines.length > 0}
 			<div class="mt-8 text-center">
 				<div class="card p-8 bg-surface-100 dark:bg-surface-800">
 					<h3 class="text-xl font-semibold mb-4 text-surface-900 dark:text-surface-100">
-						Start Building Your Routine Habits! 🚀
+						Time to get started! 🎉
 					</h3>
 					<p class="text-surface-600 dark:text-surface-300 mb-6">
-						Complete your first routine to see detailed statistics and track your progress.
+						You haven't logged any sessions yet. Complete your first routine to see your stats here.
 					</p>
 					<a href="/" class="btn preset-filled-primary-500">
-						Create Your First Routine
+						Run your first routine
 					</a>
 				</div>
 			</div>

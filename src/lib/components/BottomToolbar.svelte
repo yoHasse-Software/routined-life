@@ -41,20 +41,19 @@
 					<ListChecks size={20} />
 				</a>
 				
-				<!-- Create New Routine Button -->
-				<a 
-					href="/routines/new" 
-					class="btn {isNewRoutine ? 'preset-filled-primary-500' : 'preset-outlined-primary-500'} text-lg py-4 px-6 rounded-xl font-semibold shadow-lg flex-1 sm:flex-initial text-center min-w-24"
-				>
-                <Plus size={20} />
-            </a>
-				
 				<!-- Stats Button -->
 				<a 
 					href="/stats" 
 					class="btn {isStats ? 'preset-filled-secondary-500' : 'preset-outlined-secondary-500'} text-lg py-4 px-6 rounded-xl flex-1 sm:flex-initial text-center min-w-24"
 				>
 					<ChartColumnBig size={20} />
+				</a>
+				<!-- Create New Routine Button -->
+				<a 
+					href="/routines/new" 
+					class="btn {isNewRoutine ? 'preset-filled-primary-500' : 'preset-outlined-primary-500'} text-lg py-4 px-6 rounded-xl font-semibold shadow-lg flex-1 sm:flex-initial text-center min-w-24"
+				>
+					<Plus size={20} />
 				</a>
 			{:else if mode === 'create'}
 				<!-- Create Mode Buttons -->

@@ -6,7 +6,7 @@
 	import { DAYS_OF_WEEK } from '$lib/types';
 	import type { Routine, Session, SessionStatus, Step } from '$lib/types';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
-        import { Clock, ChevronLeft, ChevronRight, Calendar, Settings } from '@lucide/svelte';
+        import { Clock, ChevronLeft, ChevronRight, Calendar, Settings, Star, Rocket } from '@lucide/svelte';
 
 	
 	let routines = $state<Routine[]>([]);
@@ -19,6 +19,7 @@
 	
 	let currentWeekDates = $state<Date[]>([]);
 	let dayPopupOpen = $state(false);
+	let completedTodayOpen = $state(false);
 
 	let value = $state(['recent']);
 	
@@ -67,6 +68,14 @@
 	
 	function closeDayPopup() {
 		dayPopupOpen = false;
+	}
+	
+	function toggleCompletedToday() {
+		completedTodayOpen = !completedTodayOpen;
+	}
+	
+	function closeCompletedToday() {
+		completedTodayOpen = false;
 	}
 	
 	function previousDay() {
@@ -219,7 +228,7 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<h1 class="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">
-					🌟 Routined Life
+					<div class="flex items-center justify-start space-x-3"> <Star class="text-warning-500" /><span>Routined Life</span></div>
 				</h1>
 				<p class="text-surface-600 dark:text-surface-300">
 					Manage your daily routines and build healthy habits
@@ -243,40 +252,56 @@
 			</div>
 		</div>
 	{:else}
-		<div class="grid lg:grid-cols-2 gap-8">
-			<!-- Available Routines -->
-			<section>
-
-				{#if getFilteredRoutines().length > 0}
-					<div class="space-y-4">
-						{#each getFilteredRoutines() as routine (routine.id)}
-							{@const stats = routineStats.get(routine.id)}
-							<a 
-								href="/routines/{routine.id}"
-								class="card p-4 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-all cursor-pointer hover:scale-[1.02] block"
-								style="border-left: 4px solid {routine.color}"
-							>
-								<div class="flex items-center space-x-3">
-									<span class="text-2xl">{routine.emoji}</span>
-									<div class="flex-1">
-										<h3 class="font-semibold text-surface-900 dark:text-surface-100 text-lg">
-											{routine.name}
-										</h3>
-										{#if routine.notes}
-											<p class="text-sm text-surface-600 dark:text-surface-300 mb-2">
-												{routine.notes}
-											</p>
-										{/if}
-										{#if stats}
-											<div class="flex items-center space-x-4 text-sm text-surface-500 dark:text-surface-400">
-												<span>{stats.stepCount} steps</span>
-												<span>{formatTime(stats.totalDuration)}</span>
-											</div>
-										{/if}
-									</div>
+		<!-- Available Routines - Now takes full width -->
+		<section>
+			{#if getFilteredRoutines().length > 0}
+				<div class="space-y-4">
+					{#each getFilteredRoutines() as routine (routine.id)}
+						{@const stats = routineStats.get(routine.id)}
+						<a 
+							href="/routines/{routine.id}"
+							class="card p-4 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-all cursor-pointer hover:scale-[1.02] block"
+							style="border-left: 4px solid {routine.color}"
+						>
+							<div class="flex items-center space-x-3">
+								<span class="text-2xl">{routine.emoji}</span>
+								<div class="flex-1">
+									<h3 class="font-semibold text-surface-900 dark:text-surface-100 text-lg">
+										{routine.name}
+									</h3>
+									{#if routine.notes}
+										<p class="text-sm text-surface-600 dark:text-surface-300 mb-2">
+											{routine.notes}
+										</p>
+									{/if}
+									{#if stats}
+										<div class="flex items-center space-x-4 text-sm text-surface-500 dark:text-surface-400">
+											<span>{stats.stepCount} steps</span>
+											<span>{formatTime(stats.totalDuration)}</span>
+										</div>
+									{/if}
 								</div>
+							</div>
+						</a>
+					{/each}
+				</div>
+			{:else}
+				{#if routines.length === 0}
+					<div class="mt-8 text-center">
+						<div class="card p-8 bg-surface-100 dark:bg-surface-800">
+							<h3 class="text-xl font-semibold mb-4 text-surface-900 dark:text-surface-100">
+								<div class="flex items-center justify-center space-x-3"> 
+								<span>Time to get started!</span>
+								<Rocket class="text-primary-500" />
+								</div>
+							</h3>
+							<p class="text-surface-600 dark:text-surface-300 mb-6">
+								Create your first routine to begin organizing your daily habits and tasks.
+							</p>
+							<a href="/routines/new" class="btn preset-filled-primary-500">
+								Create Your First Routine
 							</a>
-						{/each}
+						</div>
 					</div>
 				{:else}
 					<div class="card p-6 text-center bg-surface-100 dark:bg-surface-800">
@@ -287,63 +312,27 @@
 						</p>
 					</div>
 				{/if}
-			</section>
 
-			<!-- Completed Today -->
-			<section>
-				<Accordion {value} onValueChange={(e) => (value = e.value)} collapsible>
-					<Accordion.Item value="completed">
-						{#snippet lead()}<Clock />{/snippet}
-						{#snippet control()}Completed on {getDayName(selectedDate)}{/snippet}
-						{#snippet panel()}
-							{#if recentSessions.length > 0}
-								<div class="space-y-3">
-									{#each recentSessions as session (session.id)}
-										{@const routine = routines.find(r => r.id === session.routineId)}
-										{#if routine}
-											<div class="card p-3 bg-surface-100 dark:bg-surface-800">
-												<div class="flex items-center justify-between">
-													<div class="flex items-center space-x-2">
-														<span class="text-lg">{routine.emoji}</span>
-														<div>
-															<p class="font-medium text-surface-900 dark:text-surface-100">
-																{routine.name}
-															</p>
-															<p class="text-xs text-surface-600 dark:text-surface-300">
-																Completed at {session.startTimestamp.toLocaleTimeString()}
-															</p>
-															{#if session.endTimestamp}
-																<p class="text-xs text-surface-500 dark:text-surface-400">
-																	Duration: {durationFromSession(session)}
-																</p>
-															{/if}
-														</div>
-													</div>
-													<a href="/routines/{routine.id}" class="btn btn-secondary btn-sm">View</a>
-												</div>
-											</div>
-										{/if}
-									{/each}
-								</div>
-							{:else}
-								<div class="card p-6 text-center bg-surface-100 dark:bg-surface-800">
-									<p class="text-surface-600 dark:text-surface-300">
-										No routines completed on {formatDate(selectedDate)}
-									</p>
-								</div>
-							{/if}
-						{/snippet}
-					</Accordion.Item>
-				</Accordion>
-			</section>
-		</div>
+			{/if}
+		</section>
 	{/if}
 </div>
 
 <!-- Day Selector Bar - Fixed above bottom toolbar -->
 <div class="fixed bottom-16 mb-6 left-0 right-0 bg-surface-50 dark:bg-surface-900 p-4 z-40">
 	<div class="container mx-auto max-w-6xl">
-		<div class="flex justify-end items-center space-x-4">
+		<div class="flex justify-between items-center space-x-4">
+			<!-- Completed Today Button -->
+			<button 
+				onclick={toggleCompletedToday}
+				class="flex items-center space-x-2 px-4 py-3 
+					text-white hover:text-secondary-300 dark:hover:text-secondary-600
+					rounded-lg transition-colors font-semibold min-w-[140px] justify-center"
+			>
+				<Clock size={24} />
+				<span>Completed</span>
+			</button>
+			
 			<!-- Day Selector Button -->
 			<button 
 				onclick={toggleDayPopup}
@@ -354,7 +343,6 @@
 				<span>{getDayName(selectedDate)}</span>
 				<Calendar size={24} />
 			</button>
-			<!-- <button> settings button -->
 		</div>
 	</div>
 </div>
@@ -398,6 +386,68 @@
 					</button>
 				{/each}
 			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Completed Today Popup -->
+{#if completedTodayOpen}
+	<!-- Backdrop -->
+	<div 
+		class="fixed inset-0 bg-black opacity-50 z-[60]" 
+		onclick={closeCompletedToday}
+		onkeydown={(e) => e.key === 'Escape' && closeCompletedToday()}
+		role="button"
+		tabindex="0"
+	></div>
+	
+	<!-- Popup Panel -->
+	<div 
+		class="fixed bottom-0 left-0 right-0 bg-surface-100 dark:bg-surface-800 border-t border-surface-300 dark:border-surface-600 z-[70] p-4 sm:p-6 max-h-[80vh] overflow-y-auto"
+	>
+		<div class="w-full sm:container sm:mx-auto sm:max-w-6xl">
+			<!-- Header -->
+			<h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4 text-center">
+				Completed on {getDayName(selectedDate)}
+			</h3>
+			
+			<!-- Content -->
+			{#if recentSessions.length > 0}
+				<div class="space-y-3">
+					{#each recentSessions as session (session.id)}
+						{@const routine = routines.find(r => r.id === session.routineId)}
+						{#if routine}
+							<div class="card p-3 bg-surface-200 dark:bg-surface-700">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center space-x-2">
+										<span class="text-lg">{routine.emoji}</span>
+										<div>
+											<p class="font-medium text-surface-900 dark:text-surface-100">
+												{routine.name}
+											</p>
+											<p class="text-xs text-surface-600 dark:text-surface-300">
+												Completed at {session.startTimestamp.toLocaleTimeString()}
+											</p>
+											{#if session.endTimestamp}
+												<p class="text-xs text-surface-500 dark:text-surface-400">
+													Duration: {durationFromSession(session)}
+												</p>
+											{/if}
+										</div>
+									</div>
+									<a href="/routines/{routine.id}" class="btn btn-secondary btn-sm">View</a>
+								</div>
+							</div>
+						{/if}
+					{/each}
+				</div>
+			{:else}
+				<div class="card p-6 text-center bg-surface-200 dark:bg-surface-700">
+					<p class="text-surface-600 dark:text-surface-300">
+						No routines completed on {formatDate(selectedDate)}
+					</p>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}

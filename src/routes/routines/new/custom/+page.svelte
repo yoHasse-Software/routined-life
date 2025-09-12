@@ -3,10 +3,12 @@
 	import { DataStoreService } from '$lib/DataStoreService';
 	import { ROUTINE_COLORS, ALL_DAYS } from '$lib/types';
 	import { formatTime } from '$lib/Utilities.js';
-	import type { Routine, Step, EditableStep } from '$lib/types';
+	import type { Routine, Step, EditableStep, AppSettings } from '$lib/types';
 	import StepsEditor from '$lib/components/StepsEditor.svelte';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
 	import DayScheduler from '$lib/components/DayScheduler.svelte';
+	import { autoAssignEmoji } from '$lib/EmojiUtils';
+	import { onMount } from 'svelte';
 	
 	let routine = $state({
 		name: '',
@@ -28,6 +30,21 @@
 	}]);
 	
 	let saving = $state(false);
+	let settings = $state<AppSettings | null>(null);
+	
+	onMount(() => {
+		// Load settings
+		settings = DataStoreService.getSettings();
+	});
+	
+	// Function to handle auto-emoji assignment for routine name
+	function handleRoutineNameChange(newName: string) {
+		if (settings?.autoEmoji) {
+			routine.name = autoAssignEmoji(newName, true);
+		} else {
+			routine.name = newName;
+		}
+	}
 	
 	function addStep() {
 		const newOrder = steps.length > 0 ? Math.max(...steps.map(s => s.order)) + 1 : 0;
@@ -168,7 +185,8 @@
 						</label>
 						<input
 							id="routine-name"
-							bind:value={routine.name}
+							value={routine.name}
+							oninput={(e) => handleRoutineNameChange((e.target as HTMLInputElement).value)}
 							type="text"
 							placeholder="e.g., Morning Routine"
 							class="input w-full"

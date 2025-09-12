@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { formatTime } from '$lib/Utilities';
 	import { ALL_DAYS } from '$lib/types';
-	import type { EditableStep } from '$lib/types';
+	import type { EditableStep, AppSettings } from '$lib/types';
     import { ChevronDown, ChevronUp, Plus, SquareCheck, Trash } from '@lucide/svelte';
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
 	import DayScheduler from './DayScheduler.svelte';
 	import { onMount } from 'svelte';
     import { on } from 'svelte/events';
+	import { DataStoreService } from '$lib/DataStoreService';
+	import { autoAssignEmoji } from '$lib/EmojiUtils';
 	
 	interface Props {
 		steps: EditableStep[];
@@ -29,6 +31,7 @@
 	}: Props = $props();
 
     let checklistValue = $state(['none']);
+	let settings = $state<AppSettings | null>(null);
 	
 	// References to carousel elements for each step
 	let carouselRefs: (HTMLElement | undefined)[] = $state([]);
@@ -39,6 +42,10 @@
 	
 	// Initialize carousel positions when component mounts or steps change
 	onMount(() => {
+		// Load settings
+		settings = DataStoreService.getSettings();
+		$inspect(settings);
+		
 		// Small delay to ensure DOM is fully rendered
 		setTimeout(() => {
 			steps.forEach((step, index) => {
@@ -48,8 +55,19 @@
 				}
 			});
 		}, 100);
-
 	});
+	
+	// Function to handle auto-emoji assignment when step name changes
+	function handleStepNameChange(index: number, newName: string) {
+		// Apply auto-emoji if enabled
+		console.log('Step name changed:', newName);
+		if (settings?.autoEmoji) {
+			console.log('Auto-assigning emoji');
+			steps[index].name = autoAssignEmoji(newName, true);
+		} else {
+			steps[index].name = newName;
+		}
+	}
 	
 	// Update carousel positions when steps change
 	$effect(() => {
@@ -216,7 +234,8 @@
 						</label>
 						<input
 							id="step-name-{index}"
-							bind:value={step.name}
+							value={step.name}
+							oninput={(e) => handleStepNameChange(index, (e.target as HTMLInputElement).value)}
 							type="text"
 							placeholder="e.g., 🦷 Brush teeth"
 							class="input w-full"

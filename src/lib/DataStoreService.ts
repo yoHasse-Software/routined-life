@@ -174,7 +174,12 @@ class DataStore {
         if (typeof window === 'undefined') return null;
         try {
             const data = localStorage.getItem(this.STORAGE_KEYS.SETTINGS);
-            return data ? JSON.parse(data) : null;
+            return data ? JSON.parse(data) : {
+                autoEmoji: true,
+                darkMode: false,
+                weekStartsOnMonday: false,
+                timeFormat24h: false
+            };
         } catch (error) {
             console.error('Failed to load settings:', error);
             return null;
