@@ -204,6 +204,11 @@
 			return total + (step.durationMinutes * 60);
 		}, 0);
 	}
+
+	$effect(() => {
+		// Ensure at least one step
+		routine.availableDays;
+	});
 </script>
 
 <svelte:head>
@@ -328,6 +333,7 @@
 				<!-- Steps -->
 				<StepsEditor 
 					bind:steps={steps}
+					routineAvailableDays={routine.availableDays}
 					onAddStep={addStep}
 					onRemoveStep={removeStep}
 					onMoveStep={moveStep}

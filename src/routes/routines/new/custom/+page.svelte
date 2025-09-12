@@ -237,6 +237,7 @@
 			<!-- Steps -->
 			<StepsEditor 
 				bind:steps={steps} 
+				routineAvailableDays={routine.availableDays}
 				onAddStep={addStep}
 				onRemoveStep={removeStep}
 				onMoveStep={moveStep}

@@ -109,15 +109,15 @@ export type RoutineColor = typeof ROUTINE_COLORS[number];
 
 // Day scheduling constants and utilities
 export const DAYS_OF_WEEK = [
-    { index: 0, short: 'S', full: 'Sunday' },
     { index: 1, short: 'M', full: 'Monday' },
     { index: 2, short: 'T', full: 'Tuesday' },
     { index: 3, short: 'W', full: 'Wednesday' },
     { index: 4, short: 'T', full: 'Thursday' },
     { index: 5, short: 'F', full: 'Friday' },
-    { index: 6, short: 'S', full: 'Saturday' }
+    { index: 6, short: 'S', full: 'Saturday' },
+    { index: 0, short: 'S', full: 'Sunday' }
 ] as const;
 
 export const WEEKDAYS = [1, 2, 3, 4, 5]; // Monday to Friday
-export const WEEKENDS = [0, 6]; // Sunday and Saturday
-export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]; // All days
+export const WEEKENDS = [6, 0]; // Saturday and Sunday
+export const ALL_DAYS = [1, 2, 3, 4, 5, 6, 0]; // Monday-first order

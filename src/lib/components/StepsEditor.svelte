@@ -13,6 +13,7 @@
 		onMoveStep: (index: number, direction: 'up' | 'down') => void;
 		onAddChecklistItem: (stepIndex: number) => void;
 		onRemoveChecklistItem: (stepIndex: number, itemIndex: number) => void;
+		routineAvailableDays?: number[]; // Available days from the parent routine
 	}
 	
 	let { 
@@ -21,7 +22,8 @@
 		onRemoveStep,
 		onMoveStep,
 		onAddChecklistItem,
-		onRemoveChecklistItem
+		onRemoveChecklistItem,
+		routineAvailableDays = ALL_DAYS
 	}: Props = $props();
 
     let checklistValue = $state(['none']);
@@ -274,10 +276,11 @@
 					<!-- Day Scheduling for Step -->
 					<div>
 						{#if !step.availableDays}
-							{step.availableDays = [...ALL_DAYS]}
+							{step.availableDays = [...routineAvailableDays]}
 						{/if}
 						<DayScheduler 
 							bind:selectedDays={step.availableDays} 
+							availableDays={routineAvailableDays}
 							label="When should this step be active?"
 							showPresets={true}
 						/>
