@@ -126,12 +126,15 @@
 		}
 	}
 	
-	// Function to handle auto-emoji assignment for routine name
-	function handleRoutineNameChange(newName: string) {
-		if (settings?.autoEmoji) {
-			routine.name = autoAssignEmoji(newName, true);
-		} else {
-			routine.name = newName;
+	// Function to handle routine name input changes (just updates the value)
+	function handleRoutineNameInput(newName: string) {
+		routine.name = newName;
+	}
+	
+	// Function to handle auto-emoji assignment when leaving the field
+	function handleRoutineNameBlur() {
+		if (settings?.autoEmoji && routine.name) {
+			routine.name = autoAssignEmoji(routine.name, true);
 		}
 	}
 	
@@ -280,7 +283,8 @@
 							<input
 								id="routine-name"
 								value={routine.name}
-								oninput={(e) => handleRoutineNameChange((e.target as HTMLInputElement).value)}
+								oninput={(e) => handleRoutineNameInput((e.target as HTMLInputElement).value)}
+								onblur={() => handleRoutineNameBlur()}
 								type="text"
 								placeholder="e.g., Morning Routine"
 								class="input w-full"

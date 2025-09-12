@@ -57,15 +57,15 @@
 		}, 100);
 	});
 	
-	// Function to handle auto-emoji assignment when step name changes
-	function handleStepNameChange(index: number, newName: string) {
-		// Apply auto-emoji if enabled
-		console.log('Step name changed:', newName);
-		if (settings?.autoEmoji) {
-			console.log('Auto-assigning emoji');
-			steps[index].name = autoAssignEmoji(newName, true);
-		} else {
-			steps[index].name = newName;
+	// Function to handle step name input changes (just updates the value)
+	function handleStepNameInput(index: number, newName: string) {
+		steps[index].name = newName;
+	}
+	
+	// Function to handle auto-emoji assignment when leaving the field
+	function handleStepNameBlur(index: number) {
+		if (settings?.autoEmoji && steps[index].name) {
+			steps[index].name = autoAssignEmoji(steps[index].name, true);
 		}
 	}
 	
@@ -235,7 +235,8 @@
 						<input
 							id="step-name-{index}"
 							value={step.name}
-							oninput={(e) => handleStepNameChange(index, (e.target as HTMLInputElement).value)}
+							oninput={(e) => handleStepNameInput(index, (e.target as HTMLInputElement).value)}
+							onblur={() => handleStepNameBlur(index)}
 							type="text"
 							placeholder="e.g., 🦷 Brush teeth"
 							class="input w-full"
