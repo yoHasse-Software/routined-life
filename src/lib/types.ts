@@ -6,6 +6,7 @@ export interface Routine {
     emoji: string;
     color: string;
     notes?: string;
+    availableDays?: number[]; // Array of day indices (0=Sunday, 1=Monday, etc.)
     createdAt: Date;
     updatedAt: Date;
 }
@@ -17,6 +18,7 @@ export interface Step {
     description?: string;
     durationSeconds: number;
     checklist: string[];
+    availableDays?: number[]; // Array of day indices (0=Sunday, 1=Monday, etc.)
     order: number;
 }
 
@@ -85,6 +87,7 @@ export interface EditableStep {
     durationMinutes: number;
     checklist: string[];
     tempChecklistItem: string;
+    availableDays?: number[]; // Array of day indices (0=Sunday, 1=Monday, etc.)
     order: number;
 }
 
@@ -103,3 +106,18 @@ export const ROUTINE_COLORS = [
 ] as const;
 
 export type RoutineColor = typeof ROUTINE_COLORS[number];
+
+// Day scheduling constants and utilities
+export const DAYS_OF_WEEK = [
+    { index: 0, short: 'S', full: 'Sunday' },
+    { index: 1, short: 'M', full: 'Monday' },
+    { index: 2, short: 'T', full: 'Tuesday' },
+    { index: 3, short: 'W', full: 'Wednesday' },
+    { index: 4, short: 'T', full: 'Thursday' },
+    { index: 5, short: 'F', full: 'Friday' },
+    { index: 6, short: 'S', full: 'Saturday' }
+] as const;
+
+export const WEEKDAYS = [1, 2, 3, 4, 5]; // Monday to Friday
+export const WEEKENDS = [0, 6]; // Sunday and Saturday
+export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]; // All days

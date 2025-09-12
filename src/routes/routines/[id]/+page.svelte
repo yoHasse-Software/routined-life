@@ -110,8 +110,6 @@
 					{@const isCompleted = completedSteps.has(step.id)}
 					<div class="card p-4 bg-surface-100 dark:bg-surface-800 transition-all {isCompleted ? 'opacity-75 bg-success-50 dark:bg-success-900/20' : ''}">
 						<div class="flex items-center space-x-4">
-
-							<span class="text-2xl">{step.emoji}</span>
 							<div class="flex-1">
 								<label for="step-{step.id}" class="cursor-pointer">
 									<h3 class="font-semibold text-surface-900 dark:text-surface-100 {isCompleted ? 'line-through text-surface-500' : ''}">

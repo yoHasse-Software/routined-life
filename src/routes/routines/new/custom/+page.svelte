@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { dataStore } from '$lib/DataStoreService';
-	import { ROUTINE_COLORS } from '$lib/types';
+	import { ROUTINE_COLORS, ALL_DAYS } from '$lib/types';
 	import { formatTime } from '$lib/Utilities.js';
 	import type { Routine, Step, EditableStep } from '$lib/types';
 	import StepsEditor from '$lib/components/StepsEditor.svelte';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
+	import DayScheduler from '$lib/components/DayScheduler.svelte';
 	
 	let routine = $state({
 		name: '',
 		emoji: '⭐',
 		color: ROUTINE_COLORS[0] as string,
-		notes: ''
+		notes: '',
+		availableDays: [...ALL_DAYS] // Default to all days
 	});
 	
 	let steps = $state<EditableStep[]>([{
@@ -20,6 +22,7 @@
 		durationMinutes: 5,
 		checklist: [],
 		tempChecklistItem: '',
+		availableDays: [...ALL_DAYS], // Default to all days
 		order: 0
 	}]);
 	
@@ -33,6 +36,7 @@
 			durationMinutes: 5,
 			checklist: [],
 			tempChecklistItem: '',
+			availableDays: [...ALL_DAYS], // Default to all days
 			order: newOrder
 		});
 	}
@@ -84,6 +88,7 @@
 				emoji: routine.emoji,
 				color: routine.color,
 				notes: routine.notes.trim(),
+				availableDays: routine.availableDays,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			};
@@ -100,6 +105,7 @@
 					description: step.description.trim(),
 					durationSeconds: step.durationMinutes * 60,
 					checklist: step.checklist,
+					availableDays: step.availableDays,
 					order: i
 				};
 				
@@ -215,6 +221,15 @@
 							class="textarea w-full"
 							rows="3"
 						></textarea>
+					</div>
+					
+					<!-- Day Scheduling -->
+					<div>
+						<DayScheduler 
+							bind:selectedDays={routine.availableDays} 
+							label="When should this routine be available?"
+							showPresets={true}
+						/>
 					</div>
 				</div>
 			</section>

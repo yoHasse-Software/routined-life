@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { formatTime } from '$lib/Utilities';
+	import { ALL_DAYS } from '$lib/types';
 	import type { EditableStep } from '$lib/types';
     import { ChevronDown, ChevronUp, Plus, SquareCheck, Trash } from '@lucide/svelte';
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
+	import DayScheduler from './DayScheduler.svelte';
 	
 	interface Props {
 		steps: EditableStep[];
@@ -268,6 +270,19 @@
 							</div>
 						</div>
 					</div>
+					
+					<!-- Day Scheduling for Step -->
+					<div>
+						{#if !step.availableDays}
+							{step.availableDays = [...ALL_DAYS]}
+						{/if}
+						<DayScheduler 
+							bind:selectedDays={step.availableDays} 
+							label="When should this step be active?"
+							showPresets={true}
+						/>
+					</div>
+					
                     {#if false}
                     <Accordion value={checklistValue} onValueChange={checkListChanged} collapsible>
                         <Accordion.Item value="step-checklist-{index + 1}">

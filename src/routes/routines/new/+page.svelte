@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { dataStore } from '$lib/DataStoreService.js';
 	import { ROUTINE_TEMPLATES } from '$lib/RoutineTemplates';
+	import { ALL_DAYS } from '$lib/types';
 	import type { Routine } from '$lib/types';
 	import { Plus, Sparkles } from '@lucide/svelte';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
@@ -14,6 +15,7 @@
 			emoji: template.emoji,
 			color: template.color,
 			notes: '',
+			availableDays: [...ALL_DAYS], // Default to all days
 			createdAt: new Date(),
 			updatedAt: new Date()
 		};
@@ -30,6 +32,7 @@
 				description: step.description,
 				durationSeconds: step.durationSeconds,
 				checklist: step.checklist,
+				availableDays: [...ALL_DAYS], // Default to all days
 				order: i
 			});
 		}

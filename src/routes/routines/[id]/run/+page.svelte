@@ -341,7 +341,6 @@
 						<div class="text-center max-w-2xl w-full">
 							<!-- Current Step -->
 							<div class="mb-8">
-								<span class="text-6xl sm:text-8xl block mb-6">{currentStep.emoji}</span>
 								<h1 class="text-2xl sm:text-4xl font-bold mb-4 px-4">{currentStep.name}</h1>
 								{#if currentStep.description}
 									<p class="text-lg sm:text-xl text-surface-300 mb-6 px-4">{currentStep.description}</p>

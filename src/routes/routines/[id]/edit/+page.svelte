@@ -3,11 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { dataStore } from '$lib/DataStoreService';
-	import { ROUTINE_COLORS } from '$lib/types';
+	import { ROUTINE_COLORS, ALL_DAYS } from '$lib/types';
 	import { formatTime } from '$lib/Utilities.js';
 	import type { Routine, Step, EditableStep } from '$lib/types';
 	import StepsEditor from '$lib/components/StepsEditor.svelte';
 	import BottomToolbar from '$lib/components/BottomToolbar.svelte';
+	import DayScheduler from '$lib/components/DayScheduler.svelte';
 	import { Trash } from '@lucide/svelte';
 
 	const routineId = page.params.id;
@@ -16,7 +17,8 @@
 		name: '',
 		emoji: '⭐',
 		color: ROUTINE_COLORS[0] as string,
-		notes: ''
+		notes: '',
+		availableDays: [...ALL_DAYS] // Default to all days
 	});
 
 	let steps = $state<EditableStep[]>([]);
@@ -48,6 +50,7 @@
 		routine.emoji = originalRoutine.emoji;
 		routine.color = originalRoutine.color;
 		routine.notes = originalRoutine.notes || '';
+		routine.availableDays = originalRoutine.availableDays || [...ALL_DAYS];
 		
 		// Load steps
 		originalSteps = await dataStore.getStepsForRoutine(routineId);
@@ -58,6 +61,7 @@
 			durationMinutes: Math.floor(step.durationSeconds / 60),
 			checklist: [...step.checklist],
 			tempChecklistItem: '',
+			availableDays: step.availableDays || [...ALL_DAYS], // Default to all days
 			order: step.order
 		}));
 		
@@ -74,6 +78,7 @@
 			durationMinutes: 5,
 			checklist: [],
 			tempChecklistItem: '',
+			availableDays: [...ALL_DAYS], // Default to all days
 			order: steps.length
 		});
 	}
@@ -137,6 +142,7 @@
 				emoji: routine.emoji,
 				color: routine.color,
 				notes: routine.notes.trim(),
+				availableDays: routine.availableDays,
 				updatedAt: new Date()
 			};
 			
@@ -160,6 +166,7 @@
 					description: step.description.trim(),
 					durationSeconds: step.durationMinutes * 60,
 					checklist: step.checklist,
+					availableDays: step.availableDays,
 					order: i
 				};
 				
@@ -290,6 +297,15 @@
 									{/each}
 								</div>
 							</div>
+						</div>
+						
+						<!-- Day Scheduling -->
+						<div>
+							<DayScheduler 
+								bind:selectedDays={routine.availableDays} 
+								label="When should this routine be available?"
+								showPresets={true}
+							/>
 						</div>
 						
                         {#if false} <!-- Notes are currently not editable -->
