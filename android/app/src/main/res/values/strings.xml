@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">routined-life</string>
+    <string name="title_activity_main">routined-life</string>
+    <string name="package_name">se.yohasse.routinedlife</string>
+    <string name="custom_url_scheme">se.yohasse.routinedlife</string>
+</resources>

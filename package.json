@@ -26,6 +26,10 @@
 		"vite": "^7.0.4"
 	},
 	"dependencies": {
+		"@capacitor/android": "^7.4.3",
+		"@capacitor/cli": "^7.4.3",
+		"@capacitor/core": "^7.4.3",
+		"@capacitor/ios": "^7.4.3",
 		"@lucide/svelte": "^0.543.0",
 		"emojilib": "^4.0.2",
 		"fast-levenshtein": "^3.0.0"
